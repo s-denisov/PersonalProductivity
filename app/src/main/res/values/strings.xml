@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">PersonalProductivity</string>
+    <string name="btn_work_start_text">Start</string>
+    <string name="btn_work_stop_text">Stop</string>
+</resources>
