@@ -1,7 +1,6 @@
 package com.example.personalproductivity;
 
 import android.annotation.SuppressLint;
-import android.graphics.Color;
 import android.os.CountDownTimer;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -20,9 +19,15 @@ public class WorkOrBreakTimer {
     private final long initialTime;
 
     @SuppressLint("DefaultLocale")
+    public static String toHoursMinutes(long millis) {
+        long seconds = millis / 1000;
+        return String.format("%d:%02d", seconds / 3600, seconds % 3600 / 60);
+    }
+
+    @SuppressLint("DefaultLocale")
     private String formatMilliseconds(long millis) {
         long seconds = millis / 1000;
-        return String.format("%d:%02d:%02d", seconds / 3600, seconds % 3600 / 60, seconds % 60);
+        return String.format("%s:%02d", toHoursMinutes(millis), seconds % 60);
     }
 
     private void createNotification(String text) {
@@ -42,6 +47,7 @@ public class WorkOrBreakTimer {
                 representation.setText(formatMilliseconds(millisUntilFinished));
                 timeLeft = millisUntilFinished;
                 remainingPercentage.setProgress((int) (millisUntilFinished * 100 / initialTime));
+                context.addToDayTotal(findTimeSpent());
                 if (!isWorkTimer && millisUntilFinished < 5 * 60 * 1000 && !breakAlmostOverNotificationSent) {
                     createNotification("Break almost over");
                     breakAlmostOverNotificationSent = true;
@@ -50,8 +56,7 @@ public class WorkOrBreakTimer {
 
             @Override
             public void onFinish() {
-                representation.setTextColor(isWorkTimer ? Color.GREEN : Color.RED);
-                representation.setText("Done!");
+                representation.setText(R.string.done_button_text);
                 remainingPercentage.setProgress(0);
                 createNotification((isWorkTimer ? "Work" : "Break") + " complete");
                 if (!isWorkTimer) context.breakTimerFinished();
@@ -69,6 +74,7 @@ public class WorkOrBreakTimer {
         this.isWorkTimer = isWorkTimer;
         this.remainingPercentage = remainingPercentage;
         representation.setText(formatMilliseconds(initialTime));
+        remainingPercentage.setProgress(100);
     }
 
     public void start() {
@@ -81,7 +87,12 @@ public class WorkOrBreakTimer {
         disable();
     }
 
+    public void enable() { representation.setEnabled(true); }
     public void disable() {
         representation.setEnabled(false);
+    }
+
+    public long findTimeSpent() {
+        return initialTime - timeLeft;
     }
 }
