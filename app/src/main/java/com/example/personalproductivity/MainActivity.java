@@ -4,6 +4,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,6 +16,7 @@ public class MainActivity extends AppCompatActivity {
     private WorkOrBreakTimer workTimer;
     private WorkOrBreakTimer breakTimer;
     private long workedToday = 0;
+    private ProjectRepository projectRepository;
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -25,15 +27,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createNotificationChannel();
         setContentView(R.layout.activity_main);
         createTimers(3);
+        findViewById(R.id.button_2_hours).setOnClickListener(view -> createTimers(2));
         findViewById(R.id.button_3_hours).setOnClickListener(view -> createTimers(3));
         findViewById(R.id.button_4_hours).setOnClickListener(view -> createTimers(4));
+        projectRepository = new ProjectRepository(this);
+        projectRepository.getProjects().observe(this, newProjects -> Log.i("Projects", String.valueOf(newProjects)));
+        Project p = new Project();
+        p.name = "ha";
+        projectRepository.doAction(dao -> dao.insertProject(p));
     }
 
     private void createTimers(long workHours) {
@@ -47,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         workTimer = new WorkOrBreakTimer(findViewById(R.id.button_work),
                 findViewById(R.id.progress_work), this, workHours * 3600 * 1000, true);
         breakTimer = new WorkOrBreakTimer(findViewById(R.id.button_break),
-                findViewById(R.id.progress_break), this,  3600 * 1000, false);
+                findViewById(R.id.progress_break), this,  workHours * 600 * 1000, false);
         breakTimer.enable();
         workTimerOn = false;
     }
