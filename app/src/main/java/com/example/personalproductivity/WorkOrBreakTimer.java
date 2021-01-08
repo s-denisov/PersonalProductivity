@@ -11,7 +11,7 @@ public class WorkOrBreakTimer {
 
     private final Button representation;
     private final ProgressBar remainingPercentage;
-    private final MainActivity context;
+    private final WorkTimerActivity context;
     private CountDownTimer timer;
     private final boolean isWorkTimer;
     private boolean breakAlmostOverNotificationSent = false;
@@ -66,7 +66,7 @@ public class WorkOrBreakTimer {
     }
 
     public WorkOrBreakTimer(Button representation, ProgressBar remainingPercentage,
-                            MainActivity context, long initialTime, boolean isWorkTimer) {
+                            WorkTimerActivity context, long initialTime, boolean isWorkTimer) {
         this.representation = representation;
         this.context = context;
         timeLeft = initialTime;
