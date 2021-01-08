@@ -17,7 +17,7 @@ public class ProjectRepository {
         projectDao = ProjectDatabase.getDatabase(context).projectDao();
     }
 
-    public LiveData<List<ProjectWithTaskGroup>> getProjects() {
+    public LiveData<List<Project>> getProjects() {
         return projectDao.getProjects();
     }
 

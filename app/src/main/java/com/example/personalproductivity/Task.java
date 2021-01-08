@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey;
 public class Task {
 
     @PrimaryKey(autoGenerate = true)
-    public int taskId;
+    public int id;
     public int parentTaskGroupId;
 
     public String name;
