@@ -6,15 +6,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.List;
-
-public class ProjectRecyclerViewAdapter extends RecyclerView.Adapter<ProjectRecyclerViewAdapter.ViewHolder> {
+public class ProjectRecyclerViewAdapter extends ListAdapter<Project, ProjectRecyclerViewAdapter.ViewHolder> {
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        private final TextView textView;
 
+        private final TextView textView;
         public ViewHolder(View view) {
             super(view);
             textView = view.findViewById(R.id.text_view);
@@ -23,13 +23,24 @@ public class ProjectRecyclerViewAdapter extends RecyclerView.Adapter<ProjectRecy
         public void bind(String text) {
             textView.setText(text);
         }
+
     }
 
-    private List<Project> projects;
+    public static class ProjectDiff extends DiffUtil.ItemCallback<Project> {
 
-    public ProjectRecyclerViewAdapter(List<Project> projects) {
-        Log.d("project", "adapter init");
-        this.projects = projects;
+        @Override
+        public boolean areItemsTheSame(@NonNull Project oldItem, @NonNull Project newItem) {
+            return oldItem == newItem;
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull Project oldItem, @NonNull Project newItem) {
+            return oldItem.name.equals(newItem.name);
+        }
+    }
+
+    protected ProjectRecyclerViewAdapter(@NonNull DiffUtil.ItemCallback<Project> diffCallback) {
+        super(diffCallback);
     }
 
     @NonNull
@@ -42,25 +53,9 @@ public class ProjectRecyclerViewAdapter extends RecyclerView.Adapter<ProjectRecy
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder viewHolder, final int position) {
+    public void onBindViewHolder(ViewHolder viewHolder, final int position) {
         Log.d("project", "onBindViewHolder");
-        if (projects != null) viewHolder.bind(projects.get(position).name);
-    }
-
-    @Override
-    public int getItemCount() {
-        if (projects == null) {
-            Log.d("project", "getItemCount: 0");
-            return 0;
-        }
-        Log.d("project", "getItemCount: " + projects.size());
-        return projects.size();
-    }
-
-    public void setProjects(List<Project> projects) {
-        this.projects = projects;
-        Log.d("project", "setProjects: " + projects);
-        notifyDataSetChanged();
+        viewHolder.bind(getItem(position).name);
     }
 }
 
