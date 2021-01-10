@@ -1,6 +1,5 @@
 package com.example.personalproductivity;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,13 +47,11 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<Project, ProjectRecy
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         View view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.project_recycler_row_item, viewGroup, false);
-        Log.d("project", "onCreateViewHolder");
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, final int position) {
-        Log.d("project", "onBindViewHolder");
         viewHolder.bind(getItem(position).name);
     }
 }
