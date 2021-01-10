@@ -11,7 +11,7 @@ public class WorkOrBreakTimer {
 
     private final Button representation;
     private final ProgressBar remainingPercentage;
-    private final WorkTimerActivity context;
+    private final WorkTimerFragment parent;
     private CountDownTimer timer;
     private final boolean isWorkTimer;
     private boolean breakAlmostOverNotificationSent = false;
@@ -31,10 +31,10 @@ public class WorkOrBreakTimer {
     }
 
     private void createNotification(String text) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, MainActivity.WORK_NOTIFICATION_CHANNEL_ID)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(parent.getContext(), MainActivity.WORK_NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_background)
                 .setContentTitle(text);
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(parent.getContext());
         notificationManager.notify(1, builder.build());
     }
 
@@ -47,7 +47,7 @@ public class WorkOrBreakTimer {
                 representation.setText(formatMilliseconds(millisUntilFinished));
                 timeLeft = millisUntilFinished;
                 remainingPercentage.setProgress((int) (millisUntilFinished * 100 / initialTime));
-                context.addToDayTotal(findTimeSpent());
+                parent.addToDayTotal(findTimeSpent());
                 if (!isWorkTimer && millisUntilFinished < 5 * 60 * 1000 && !breakAlmostOverNotificationSent) {
                     createNotification("Break almost over");
                     breakAlmostOverNotificationSent = true;
@@ -59,16 +59,16 @@ public class WorkOrBreakTimer {
                 representation.setText(R.string.done_button_text);
                 remainingPercentage.setProgress(0);
                 createNotification((isWorkTimer ? "Work" : "Break") + " complete");
-                if (!isWorkTimer) context.breakTimerFinished();
+                if (!isWorkTimer) parent.breakTimerFinished();
             }
         };
         timer.start();
     }
 
     public WorkOrBreakTimer(Button representation, ProgressBar remainingPercentage,
-                            WorkTimerActivity context, long initialTime, boolean isWorkTimer) {
+                            WorkTimerFragment parent, long initialTime, boolean isWorkTimer) {
         this.representation = representation;
-        this.context = context;
+        this.parent = parent;
         timeLeft = initialTime;
         this.initialTime = initialTime;
         this.isWorkTimer = isWorkTimer;

@@ -12,7 +12,7 @@ public abstract class ProjectDao {
     public abstract LiveData<List<Project>> getProjects();
 
     @Query("SELECT * FROM Project WHERE name=:name")
-    abstract Project getProject(String name);
+    public abstract Project getProject(String name);
 
     @Query("SELECT * FROM TaskGroup WHERE parentProjectName=:projectName")
     public abstract List<TaskGroup> getTaskGroups(String projectName);

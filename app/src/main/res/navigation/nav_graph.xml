@@ -2,10 +2,15 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
             android:id="@+id/nav_graph"
-            app:startDestination="@id/work_timer_activity">
-    <activity
-        android:id="@+id/work_timer_activity"
-        android:name="com.example.personalproductivity.WorkTimerActivity"
-        android:label="WorkTimerActivity"
-        tools:layout="@layout/activity_work_timer" />
+            app:startDestination="@id/work_timer_fragment">
+    <fragment
+        android:id="@+id/work_timer_fragment"
+        android:name="com.example.personalproductivity.WorkTimerFragment"
+        android:label="WorkTimerFragment"
+        tools:layout="@layout/fragment_work_timer" />
+    <fragment
+            android:id="@+id/project_list_fragment"
+            android:name="com.example.personalproductivity.ProjectListFragment"
+            android:label="ProjectListFragment"
+            tools:layout="@layout/fragment_project_list" />
 </navigation>
