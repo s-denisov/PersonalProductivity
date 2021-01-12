@@ -5,41 +5,52 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class ProjectRecyclerViewAdapter extends ListAdapter<Project, ProjectRecyclerViewAdapter.ViewHolder> {
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, ProjectRecyclerViewAdapter.ViewHolder> {
 
-        private final TextView textView;
+    class ViewHolder extends RecyclerView.ViewHolder {
+
+        private final View view;
         public ViewHolder(View view) {
             super(view);
-            textView = view.findViewById(R.id.text_view);
+            this.view = view.findViewById(R.id.text_view);
         }
 
-        public void bind(String text) {
-            textView.setText(text);
+        public void bind(TaskOrParent item) {
+            view.setOnClickListener(view -> setListState.accept(item));
+            TextView textView = view.findViewById(R.id.text_view);
+            textView.setText(item.getName());
         }
 
     }
 
-    public static class ProjectDiff extends DiffUtil.ItemCallback<Project> {
+    public static class ProjectDiff extends DiffUtil.ItemCallback<TaskOrParent> {
 
         @Override
-        public boolean areItemsTheSame(@NonNull Project oldItem, @NonNull Project newItem) {
+        public boolean areItemsTheSame(@NonNull TaskOrParent oldItem, @NonNull TaskOrParent newItem) {
             return oldItem == newItem;
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull Project oldItem, @NonNull Project newItem) {
-            return oldItem.name.equals(newItem.name);
+        public boolean areContentsTheSame(@NonNull TaskOrParent oldItem, @NonNull TaskOrParent newItem) {
+            return oldItem.equals(newItem);
         }
     }
 
-    protected ProjectRecyclerViewAdapter(@NonNull DiffUtil.ItemCallback<Project> diffCallback) {
+    private final Consumer<TaskOrParent> setListState;
+
+    public ProjectRecyclerViewAdapter(@NonNull DiffUtil.ItemCallback<TaskOrParent> diffCallback,
+                                      Consumer<TaskOrParent> setListState) {
         super(diffCallback);
+        this.setListState = setListState;
     }
 
     @NonNull
@@ -52,7 +63,15 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<Project, ProjectRecy
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, final int position) {
-        viewHolder.bind(getItem(position).name);
+        viewHolder.bind(getItem(position));
+    }
+
+    public void convertAndSubmitList(@Nullable List<? extends TaskOrParent> list) {
+        if (list == null) {
+            submitList(null);
+        } else {
+            submitList(list.stream().map(x -> (TaskOrParent) x).collect(Collectors.toList()));
+        }
     }
 }
 

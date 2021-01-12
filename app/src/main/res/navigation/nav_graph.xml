@@ -12,5 +12,6 @@
             android:id="@+id/project_list_fragment"
             android:name="com.example.personalproductivity.ProjectListFragment"
             android:label="ProjectListFragment"
-            tools:layout="@layout/fragment_project_list" />
+            tools:layout="@layout/fragment_project_list">
+    </fragment>
 </navigation>

@@ -7,4 +7,6 @@
     <string name="done_button_text">Done!</string>
     <string name="two_hours">2</string>
     <string name="add_project">Add project</string>
+    <string name="bottom_bar_work_timer_title">Timer</string>
+    <string name="bottom_bar_task_list_title">Tasks</string>
 </resources>

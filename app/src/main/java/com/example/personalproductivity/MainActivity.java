@@ -6,6 +6,8 @@ import android.os.Build;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.NavigationUI;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,13 +27,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         createNotificationChannel();
+        setUpNavigation();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        NavHostFragment n = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
-        assert n != null;
-        n.getNavController().navigate(R.id.project_list_fragment);
+    private void setUpNavigation() {
+        BottomNavigationView view = findViewById(R.id.bottom_navigation);
+        NavHostFragment host = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+        assert host != null;
+        NavigationUI.setupWithNavController(view, host.getNavController());
     }
 }

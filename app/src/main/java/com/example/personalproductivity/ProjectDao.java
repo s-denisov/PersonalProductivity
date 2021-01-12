@@ -15,10 +15,10 @@ public abstract class ProjectDao {
     public abstract Project getProject(String name);
 
     @Query("SELECT * FROM TaskGroup WHERE parentProjectName=:projectName")
-    public abstract List<TaskGroup> getTaskGroups(String projectName);
+    public abstract LiveData<List<TaskGroup>> getTaskGroups(String projectName);
 
     @Query("SELECT * FROM Task WHERE parentTaskGroupId=:taskGroupId")
-    public abstract List<Task> getTasks(int taskGroupId);
+    public abstract LiveData<List<Task>> getTasks(int taskGroupId);
 
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
