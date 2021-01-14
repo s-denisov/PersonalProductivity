@@ -45,10 +45,6 @@ public class WorkTimerFragment extends Fragment {
         ArrayAdapter<Task> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, adapterTasks);
         projectViewModel.getProjectDao().getTasksLastUsed().observe(getViewLifecycleOwner(), tasks -> {
             adapterTasks.clear();
-            Log.d("project", "---------------------------");
-            for (Task task : tasks) {
-                Log.d("project", task.name.charAt(0) + ": " + task.lastUsed);
-            }
             adapterTasks.addAll(tasks);
             adapter.notifyDataSetChanged();
             if (viewModel.getTaskSelected() != null) taskChoice.setSelection(adapter.getPosition(viewModel.getTaskSelected()));
@@ -84,7 +80,10 @@ public class WorkTimerFragment extends Fragment {
     }
 
     private void updateSelectedTask() {
-        projectViewModel.doAction(dao -> dao.updateTask(viewModel.getTaskSelected()));
+        if (viewModel.getTaskSelected() != null ) {
+            viewModel.getTaskSelected().lastUsed = System.currentTimeMillis();
+            projectViewModel.doAction(dao -> dao.updateTask(viewModel.getTaskSelected()));
+        }
     }
 
     private void createTimer() {
@@ -119,17 +118,15 @@ public class WorkTimerFragment extends Fragment {
     }
 
     private void onTick(long millisUntilFinished) {
-        viewModel.getTaskSelected().timeSpent += viewModel.getPreviousTimeRemaining() - millisUntilFinished;
-        viewModel.setPreviousTimeRemaining(millisUntilFinished);
+        if (viewModel.isWorkTimer()) {
+            viewModel.getTaskSelected().timeSpent += viewModel.getPreviousTimeRemaining() - millisUntilFinished;
+            viewModel.setPreviousTimeRemaining(millisUntilFinished);
+        }
         updateTimeDisplay(millisUntilFinished);
         updateTaskChoiceEnabled();
     }
 
     private void onFinish() {
-        if (viewModel.isWorkTimer()) {
-            viewModel.getTaskSelected().lastUsed = System.currentTimeMillis();
-            updateSelectedTask();
-        }
         createNotification(viewModel.getTimerType().getValue() + " finished");
         createTimer();
         viewModel.getTimer().start();

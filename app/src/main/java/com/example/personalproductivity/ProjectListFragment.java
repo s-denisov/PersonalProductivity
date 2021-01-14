@@ -38,7 +38,7 @@ public class ProjectListFragment extends Fragment {
                 parent == null ? viewModel.getProjects() : parent.getChildren(viewModel.getProjectDao());
         ProjectRecyclerViewAdapter adapter =
                 new ProjectRecyclerViewAdapter(new ProjectRecyclerViewAdapter.ProjectDiff(), this::setChildAsState,
-                        getViewLifecycleOwner(), viewModel.getProjectDao());
+                        getViewLifecycleOwner(), viewModel);
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview_projects);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));

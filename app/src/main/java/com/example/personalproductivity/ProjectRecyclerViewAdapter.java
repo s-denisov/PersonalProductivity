@@ -3,6 +3,8 @@ package com.example.personalproductivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +25,7 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
         private final View view;
         private final TextView nameText;
         private final TextView timeSpentText;
+        private final RadioGroup completionStatusGroup;
         private long timeSpent = 0;
 
         public ViewHolder(View view) {
@@ -30,6 +33,7 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
             this.view = view;
             nameText = view.findViewById(R.id.text_name);
             timeSpentText = view.findViewById(R.id.text_time_spent);
+            completionStatusGroup = view.findViewById(R.id.radio_group_completion_status);
         }
 
         public void bind(TaskOrParent item) {
@@ -38,6 +42,21 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
             List<TaskOrParent> l = new ArrayList<>();
             l.add(item);
             findTimeSpent(l);
+            switch (item.getCompletionStatus()) {
+                case IN_PROGRESS: ((RadioButton) view.findViewById(R.id.radio_in_progress)).setChecked(true); break;
+                case COMPLETE: ((RadioButton) view.findViewById(R.id.radio_tick)).setChecked(true); break;
+                case FAILED: ((RadioButton) view.findViewById(R.id.radio_cross)).setChecked(true);
+            }
+            completionStatusGroup.setOnCheckedChangeListener((group, checkedId) -> {
+                switch (checkedId) {
+                    case R.id.radio_in_progress: item.setCompletionStatus(CompletionStatus.IN_PROGRESS); break;
+                    case R.id.radio_tick: item.setCompletionStatus(CompletionStatus.COMPLETE); break;
+                    case R.id.radio_cross: item.setCompletionStatus(CompletionStatus.FAILED);
+                }
+                if (item instanceof Project) viewModel.doAction(dao -> dao.updateProject((Project) item));
+                if (item instanceof TaskGroup) viewModel.doAction(dao -> dao.updateTaskGroup((TaskGroup) item));
+                if (item instanceof Task) viewModel.doAction(dao -> dao.updateTask((Task) item));
+            });
         }
 
         private void findTimeSpent(List<? extends TaskOrParent> taskOrParentList) {
@@ -46,7 +65,7 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
                     timeSpent += ((Task) t).timeSpent;
                     timeSpentText.setText(formatTime(timeSpent));
                 } else {
-                    t.getChildren(dao).observe(owner, this::findTimeSpent);
+                    t.getChildren(viewModel.getProjectDao()).observe(owner, this::findTimeSpent);
                 }
             }
         }
@@ -72,15 +91,15 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
 
     private final Consumer<TaskOrParent> setListState;
     private final LifecycleOwner owner;
-    private final ProjectDao dao;
+    private final ProjectViewModel viewModel;
 
     public ProjectRecyclerViewAdapter(@NonNull DiffUtil.ItemCallback<TaskOrParent> diffCallback,
                                       Consumer<TaskOrParent> setListState, LifecycleOwner owner,
-                                      ProjectDao dao) {
+                                      ProjectViewModel viewModel) {
         super(diffCallback);
         this.setListState = setListState;
         this.owner = owner;
-        this.dao = dao;
+        this.viewModel = viewModel;
     }
 
     @NonNull

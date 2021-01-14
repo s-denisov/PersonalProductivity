@@ -20,7 +20,7 @@ public abstract class ProjectDao {
     @Query("SELECT * FROM Task WHERE parentTaskGroupId=:taskGroupId")
     public abstract LiveData<List<Task>> getTasks(int taskGroupId);
 
-    @Query("SELECT * FROM Task ORDER BY lastUsed DESC")
+    @Query("SELECT * FROM Task WHERE completionStatus='IN_PROGRESS' ORDER BY lastUsed DESC")
     public abstract LiveData<List<Task>> getTasksLastUsed();
 
 
@@ -34,5 +34,12 @@ public abstract class ProjectDao {
     public abstract void insertTask(Task task);
 
     @Update
+    public abstract void updateProject(Project project);
+
+    @Update
+    public abstract void updateTaskGroup(TaskGroup taskGroup);
+
+    @Update
     public abstract void updateTask(Task task);
+
 }

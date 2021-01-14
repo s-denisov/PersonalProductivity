@@ -5,6 +5,8 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.Objects;
@@ -22,6 +24,7 @@ public class Task implements TaskOrParent {
     public boolean failed = false;
     public long timeSpent = 0;
     public long lastUsed = 0;
+    @Getter @Setter public CompletionStatus completionStatus;
 
     @Override
     public String getName() {

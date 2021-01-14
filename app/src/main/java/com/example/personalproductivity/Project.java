@@ -5,15 +5,22 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
+import androidx.room.TypeConverters;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.Objects;
 
 @Entity
+@TypeConverters({CompletionStatus.class})
 public class Project implements TaskOrParent {
 
-    @PrimaryKey @NonNull
+    @PrimaryKey @NonNull @Getter @Setter
     public String name;
+    @Getter @Setter
+    public CompletionStatus completionStatus = CompletionStatus.IN_PROGRESS;
+//    public boolean countAsWork = true;
 
     @Ignore
     private List<TaskGroup> taskGroupList;
@@ -24,17 +31,6 @@ public class Project implements TaskOrParent {
 
     public void setTaskGroupList(List<TaskGroup> taskGroupList) {
         this.taskGroupList = taskGroupList;
-    }
-
-    @NonNull
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public void setName(@NonNull String name) {
-        this.name = name;
     }
 
     @Override
