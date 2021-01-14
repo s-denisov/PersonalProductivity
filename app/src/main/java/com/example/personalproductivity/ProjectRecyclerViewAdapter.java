@@ -6,10 +6,12 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -19,17 +21,40 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
     class ViewHolder extends RecyclerView.ViewHolder {
 
         private final View view;
+        private final TextView nameText;
+        private final TextView timeSpentText;
+        private long timeSpent = 0;
+
         public ViewHolder(View view) {
             super(view);
-            this.view = view.findViewById(R.id.text_view);
+            this.view = view;
+            nameText = view.findViewById(R.id.text_name);
+            timeSpentText = view.findViewById(R.id.text_time_spent);
         }
 
         public void bind(TaskOrParent item) {
-            view.setOnClickListener(view -> setListState.accept(item));
-            TextView textView = view.findViewById(R.id.text_view);
-            textView.setText(item.getName());
+            nameText.setText(item.getName());
+            view.setOnClickListener(v -> setListState.accept(item));
+            List<TaskOrParent> l = new ArrayList<>();
+            l.add(item);
+            findTimeSpent(l);
         }
 
+        private void findTimeSpent(List<? extends TaskOrParent> taskOrParentList) {
+            for (TaskOrParent t : taskOrParentList) {
+                if (t instanceof Task) {
+                    timeSpent += ((Task) t).timeSpent;
+                    timeSpentText.setText(formatTime(timeSpent));
+                } else {
+                    t.getChildren(dao).observe(owner, this::findTimeSpent);
+                }
+            }
+        }
+
+        private String formatTime(long milliseconds) {
+            long seconds = milliseconds / 1000;
+            return seconds / 3600 + " hours, " + seconds % 3600 / 60 + " minutes";
+        }
     }
 
     public static class ProjectDiff extends DiffUtil.ItemCallback<TaskOrParent> {
@@ -46,11 +71,16 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
     }
 
     private final Consumer<TaskOrParent> setListState;
+    private final LifecycleOwner owner;
+    private final ProjectDao dao;
 
     public ProjectRecyclerViewAdapter(@NonNull DiffUtil.ItemCallback<TaskOrParent> diffCallback,
-                                      Consumer<TaskOrParent> setListState) {
+                                      Consumer<TaskOrParent> setListState, LifecycleOwner owner,
+                                      ProjectDao dao) {
         super(diffCallback);
         this.setListState = setListState;
+        this.owner = owner;
+        this.dao = dao;
     }
 
     @NonNull

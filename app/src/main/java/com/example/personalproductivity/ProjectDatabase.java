@@ -5,7 +5,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-@Database(entities = {Project.class, TaskGroup.class, Task.class}, version = 1, exportSchema = false)
+@Database(entities = {Project.class, TaskGroup.class, Task.class}, version = 1)
 public abstract class ProjectDatabase extends RoomDatabase {
 
     public abstract ProjectDao projectDao();
@@ -14,9 +14,10 @@ public abstract class ProjectDatabase extends RoomDatabase {
 
     private static final RoomDatabase.Callback callback = new RoomDatabase.Callback() {};
     public static ProjectDatabase getDatabase(Context context) {
-        if (INSTANCE != null) return INSTANCE;
-        INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
+        if (INSTANCE == null) {
+            INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                     ProjectDatabase.class, "ProjectDatabase").addCallback(callback).build();
+        }
         return INSTANCE;
     }
 }

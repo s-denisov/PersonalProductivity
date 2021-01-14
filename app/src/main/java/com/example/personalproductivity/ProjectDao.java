@@ -20,6 +20,9 @@ public abstract class ProjectDao {
     @Query("SELECT * FROM Task WHERE parentTaskGroupId=:taskGroupId")
     public abstract LiveData<List<Task>> getTasks(int taskGroupId);
 
+    @Query("SELECT * FROM Task ORDER BY lastUsed DESC")
+    public abstract LiveData<List<Task>> getTasksLastUsed();
+
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void insertProject(Project project);
@@ -29,4 +32,7 @@ public abstract class ProjectDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void insertTask(Task task);
+
+    @Update
+    public abstract void updateTask(Task task);
 }

@@ -23,7 +23,6 @@ public class ProjectListFragment extends Fragment {
 
     private ProjectViewModel viewModel;
     private TaskOrParentType type;
-    private ProjectRecyclerViewAdapter adapter;
     private TaskOrParent parent;
 
     @Override
@@ -37,7 +36,9 @@ public class ProjectListFragment extends Fragment {
         viewModel = new ViewModelProvider(Objects.requireNonNull(getActivity())).get(ProjectViewModel.class);
         LiveData<? extends List<? extends TaskOrParent>> taskOrParentList =
                 parent == null ? viewModel.getProjects() : parent.getChildren(viewModel.getProjectDao());
-        adapter = new ProjectRecyclerViewAdapter(new ProjectRecyclerViewAdapter.ProjectDiff(), this::setChildAsState);
+        ProjectRecyclerViewAdapter adapter =
+                new ProjectRecyclerViewAdapter(new ProjectRecyclerViewAdapter.ProjectDiff(), this::setChildAsState,
+                        getViewLifecycleOwner(), viewModel.getProjectDao());
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview_projects);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));

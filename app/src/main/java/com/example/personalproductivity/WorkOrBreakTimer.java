@@ -2,20 +2,17 @@ package com.example.personalproductivity;
 
 import android.annotation.SuppressLint;
 import android.os.CountDownTimer;
-import android.widget.Button;
-import android.widget.ProgressBar;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.function.Consumer;
 
 public class WorkOrBreakTimer {
 
-    private final Button representation;
-    private final ProgressBar remainingPercentage;
-    private final WorkTimerFragment parent;
     private CountDownTimer timer;
-    private final boolean isWorkTimer;
-    private boolean breakAlmostOverNotificationSent = false;
-    private long timeLeft;
+    @Getter private long timeLeft;
+    @Setter private Consumer<Long> onTick;
+    @Setter private Runnable onFinish;
     private final long initialTime;
 
     @SuppressLint("DefaultLocale")
@@ -25,17 +22,9 @@ public class WorkOrBreakTimer {
     }
 
     @SuppressLint("DefaultLocale")
-    private String formatMilliseconds(long millis) {
+    public static String formatMilliseconds(long millis) {
         long seconds = millis / 1000;
-        return String.format("%s:%02d", toHoursMinutes(millis), seconds % 60);
-    }
-
-    private void createNotification(String text) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(parent.getContext(), MainActivity.WORK_NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_background)
-                .setContentTitle(text);
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(parent.getContext());
-        notificationManager.notify(1, builder.build());
+        return String.format("%02d:%02d", seconds / 60, seconds % 60);
     }
 
     private void createCountDownTimer() {
@@ -44,52 +33,32 @@ public class WorkOrBreakTimer {
             @SuppressLint("SetTextI18n")
             @Override
             public void onTick(long millisUntilFinished) {
-                representation.setText(formatMilliseconds(millisUntilFinished));
                 timeLeft = millisUntilFinished;
-                remainingPercentage.setProgress((int) (millisUntilFinished * 100 / initialTime));
-                parent.addToDayTotal(findTimeSpent());
-                if (!isWorkTimer && millisUntilFinished < 5 * 60 * 1000 && !breakAlmostOverNotificationSent) {
-                    createNotification("Break almost over");
-                    breakAlmostOverNotificationSent = true;
-                }
+                onTick.accept(millisUntilFinished);
             }
 
             @Override
             public void onFinish() {
-                representation.setText(R.string.done_button_text);
-                remainingPercentage.setProgress(0);
-                createNotification((isWorkTimer ? "Work" : "Break") + " complete");
-                if (!isWorkTimer) parent.breakTimerFinished();
+                onFinish.run();
             }
         };
         timer.start();
     }
 
-    public WorkOrBreakTimer(Button representation, ProgressBar remainingPercentage,
-                            WorkTimerFragment parent, long initialTime, boolean isWorkTimer) {
-        this.representation = representation;
-        this.parent = parent;
+    public WorkOrBreakTimer(long initialTime) {
         timeLeft = initialTime;
         this.initialTime = initialTime;
-        this.isWorkTimer = isWorkTimer;
-        this.remainingPercentage = remainingPercentage;
-        representation.setText(formatMilliseconds(initialTime));
-        remainingPercentage.setProgress(100);
     }
 
     public void start() {
-        createCountDownTimer();
-        representation.setEnabled(true);
+        if (timer == null) createCountDownTimer();
     }
 
     public void pause() {
-        if (timer != null) timer.cancel();
-        disable();
-    }
-
-    public void enable() { representation.setEnabled(true); }
-    public void disable() {
-        representation.setEnabled(false);
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
     }
 
     public long findTimeSpent() {

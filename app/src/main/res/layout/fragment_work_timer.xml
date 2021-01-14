@@ -7,60 +7,26 @@
         android:layout_height="match_parent"
         tools:context=".WorkTimerFragment">
 
-    <Button
-            android:layout_width="wrap_content" android:padding="18sp" android:enabled="false"
-            android:layout_height="wrap_content" app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" android:id="@+id/button_work"
-            app:layout_constraintTop_toTopOf="parent"
-            android:textSize="36sp" app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintBottom_toTopOf="@+id/button_break"/>
-    <Button
-            android:layout_width="wrap_content" android:padding="18sp"
-            android:layout_height="wrap_content" app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" android:id="@+id/button_break"
-            app:layout_constraintTop_toBottomOf="@+id/button_work" android:layout_marginTop="24dp"
-            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintHorizontal_bias="0.5"
-            android:textSize="36sp"/>
-    <ProgressBar
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/progress_work"
-            app:layout_constraintTop_toBottomOf="@+id/button_work" android:layout_marginTop="16dp"
-            app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
-    <ProgressBar
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/progress_break"
-            app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498" app:layout_constraintTop_toBottomOf="@+id/button_break"
-            android:layout_marginTop="28dp"/>
-    <Button
-            android:layout_width="wrap_content" android:minHeight="0dp" android:minWidth="0dp"
-            android:layout_height="wrap_content" android:id="@+id/button_2_hours"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="16dp"
-            android:layout_marginStart="16dp" android:text="@string/two_hours"
-            app:layout_constraintStart_toStartOf="parent"/>
-    <Button
-            android:layout_width="wrap_content" android:minHeight="0dp" android:minWidth="0dp"
-            android:layout_height="wrap_content" android:id="@+id/button_3_hours"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="16dp"
-            android:text="@string/three_hours"
-            app:layout_constraintStart_toEndOf="@+id/button_2_hours" android:layout_marginStart="16dp"/>
-    <Button
-            android:layout_width="wrap_content" android:minHeight="0dp" android:minWidth="0dp"
-            android:layout_height="wrap_content" android:id="@+id/button_4_hours"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="16dp"
-            android:text="@string/four_hours"
-            app:layout_constraintStart_toEndOf="@+id/button_3_hours" android:layout_marginStart="16dp"/>
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/text_timer"
+              app:layout_constraintTop_toTopOf="parent"
+              app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
+              app:layout_constraintStart_toStartOf="parent" app:layout_constraintHorizontal_bias="0.5"
+              android:text="23:33" android:textSize="50sp" android:textStyle="bold"/>
+    <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/button_start_stop"
+            app:layout_constraintTop_toBottomOf="@+id/text_timer"
+            android:layout_marginTop="16dp" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" android:text="@string/btn_work_start_text" />
     <TextView
+            android:text="TextView"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="24dp" android:layout_marginEnd="16dp" android:id="@+id/text_worked_today"/>
+            android:layout_height="wrap_content" android:id="@+id/text_work_type"
+            app:layout_constraintBottom_toTopOf="@+id/text_timer"
+            android:layout_marginBottom="16dp" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" android:textSize="20sp" android:textStyle="bold"/>
+    <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/spinner_task_name"
+            app:layout_constraintTop_toBottomOf="@+id/button_start_stop" android:layout_marginTop="64dp"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

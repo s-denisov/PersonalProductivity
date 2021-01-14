@@ -1,13 +1,16 @@
 package com.example.personalproductivity;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+import androidx.room.TypeConverters;
 
 import java.util.List;
 import java.util.Objects;
 
 @Entity
+@TypeConverters({CompletionStatus.class})
 public class Task implements TaskOrParent {
 
     @PrimaryKey(autoGenerate = true)
@@ -15,11 +18,10 @@ public class Task implements TaskOrParent {
     public int parentTaskGroupId;
 
     public String name;
-    public boolean succeeded;
-    public boolean failed;
-    public long timeThinking;
-    public long timeReading;
-    public long timeWriting;
+    public boolean succeeded = false;
+    public boolean failed = false;
+    public long timeSpent = 0;
+    public long lastUsed = 0;
 
     @Override
     public String getName() {
@@ -48,4 +50,11 @@ public class Task implements TaskOrParent {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return name;
+    }
+
 }
