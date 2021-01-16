@@ -14,7 +14,10 @@ public class WorkTimerViewModel extends ViewModel {
     @Getter @Setter private boolean isWorkTimer;
     private final MutableLiveData<String> timerType = new MutableLiveData<>();
     @Getter @Setter private Task taskSelected;
+    @Getter @Setter private TaskTimeRecord record;
     @Getter @Setter private long previousTimeRemaining;
+    private final MutableLiveData<Long> timeSpentToday = new MutableLiveData<>(0L);
+
 
     public LiveData<String> getTimerType() {
         return timerType;
@@ -30,5 +33,18 @@ public class WorkTimerViewModel extends ViewModel {
 
     public void flipTimerOnValue() {
         timerOn.setValue(!timerOn.getValue());
+    }
+
+
+    public LiveData<Long> getTimeSpentToday() {
+        return timeSpentToday;
+    }
+
+    public void resetTimeSpentToday() {
+        timeSpentToday.setValue(0L);
+    }
+
+    public void increaseTimeSpentTodayValue(long increase) {
+        timeSpentToday.setValue(timeSpentToday.getValue() + increase);
     }
 }

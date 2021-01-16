@@ -24,7 +24,7 @@ public class Task implements TaskOrParent {
     public boolean failed = false;
     public long timeSpent = 0;
     public long lastUsed = 0;
-    @Getter @Setter public CompletionStatus completionStatus;
+    @Getter @Setter public CompletionStatus completionStatus = CompletionStatus.IN_PROGRESS;
 
     @Override
     public String getName() {

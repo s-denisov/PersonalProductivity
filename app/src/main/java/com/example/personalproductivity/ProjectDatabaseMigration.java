@@ -15,6 +15,19 @@ public class ProjectDatabaseMigration {
                     database.execSQL("ALTER TABLE TaskGroup ADD COLUMN completionStatus TEXT DEFAULT 'IN_PROGRESS'");
                     database.execSQL("ALTER TABLE Task ADD COLUMN completionStatus TEXT DEFAULT 'IN_PROGRESS'");
                 }
+            }, new Migration(2, 3) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("CREATE TABLE TaskTimeRecord (id INTEGER NOT NULL, startTimeStamp INTEGER NOT NULL," +
+                            " daysSinceEpoch INTEGER NOT NULL, length INTEGER NOT NULL, taskId INTEGER NOT NULL, PRIMARY KEY(id))");
+                }
+            }, new Migration(3, 4) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("DROP TABLE TaskTimeRecord");
+                    database.execSQL("CREATE TABLE TaskTimeRecord (startTimeStamp INTEGER NOT NULL," +
+                            " daysSinceEpoch INTEGER NOT NULL, length INTEGER NOT NULL, taskId INTEGER NOT NULL, PRIMARY KEY(startTimeStamp))");
+                }
             }
     };
 }

@@ -1,5 +1,6 @@
 package com.example.personalproductivity;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,6 +43,7 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
             List<TaskOrParent> l = new ArrayList<>();
             l.add(item);
             findTimeSpent(l);
+            Log.d("project", item.getName() + " " + item.getCompletionStatus());
             switch (item.getCompletionStatus()) {
                 case IN_PROGRESS: ((RadioButton) view.findViewById(R.id.radio_in_progress)).setChecked(true); break;
                 case COMPLETE: ((RadioButton) view.findViewById(R.id.radio_tick)).setChecked(true); break;
