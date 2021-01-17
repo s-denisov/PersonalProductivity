@@ -1,6 +1,10 @@
 package com.example.personalproductivity;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,8 +15,11 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class WorkTimerFragment extends Fragment {
 
@@ -22,6 +29,9 @@ public class WorkTimerFragment extends Fragment {
     private TextView workTypeText;
     private Button startStopButton;
     private Spinner taskChoice;
+    private final String[] routineTaskReferences = { "morningPrepSelected", "lunchDinerSelected", "exerciseSelected" };
+    private final String dayReference = "WorkTimerFragment.daysSinceEpoch";
+    private final boolean[] routineTasksDone = new boolean[routineTaskReferences.length];
 
     private void createNotification(String text) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), MainActivity.WORK_NOTIFICATION_CHANNEL_ID)
@@ -91,6 +101,27 @@ public class WorkTimerFragment extends Fragment {
             Log.d("project", "-------------");
         });
 
+        SharedPreferences sharedPref = requireActivity().getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        if (sharedPref.getLong(dayReference, -1) != findDaysSinceEpoch()) {
+            for (String ref : routineTaskReferences) editor.putBoolean(ref, false);
+            editor.putLong(dayReference, findDaysSinceEpoch());
+            editor.apply();
+        }
+        CheckBox[] routineBoxes =  { view.findViewById(R.id.checkbox_morning_prep),
+                view.findViewById(R.id.checkbox_lunch_and_dinner), view.findViewById(R.id.checkbox_exercise) };
+        for (int i = 0; i < routineBoxes.length; i++) {
+            routineTasksDone[i] = sharedPref.getBoolean(routineTaskReferences[i], false);
+            routineBoxes[i].setChecked(routineTasksDone[i]);
+            int finalI = i;
+            routineBoxes[i].setOnClickListener(v -> {
+                boolean checked = ((CheckBox) v).isChecked();
+                routineTasksDone[finalI] = checked;
+                editor.putBoolean(routineTaskReferences[finalI], checked);
+                editor.apply();
+            });
+        }
+
         return view;
     }
 
@@ -133,14 +164,31 @@ public class WorkTimerFragment extends Fragment {
         if (timerOn) {
             startStopButton.setText(getText(R.string.btn_work_stop_text));
             viewModel.getTimer().start();
+            workTypeText.setText(viewModel.getTimerType().getValue());
             updateTaskChoiceEnabled();
         } else {
             startStopButton.setText(getText(R.string.btn_work_start_text));
             viewModel.getTimer().pause();
             taskChoice.setEnabled(true);
+            workTypeText.setText("Free time");
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!Objects.requireNonNull(viewModel.getTimerOn().getValue())) {
+                        long untilEnd = Duration.between(LocalTime.now(), LocalTime.of(22, 0)).toMillis();
+                        assert viewModel.getTimeSpentToday().getValue() != null;
+                        long workLeftToday = 7 * 3600_000 - viewModel.getTimeSpentToday().getValue();
+                        long workLeftWithBreaks = workLeftToday + 300_000 * (long) Math.ceil((double) workLeftToday / 1800_000);
+                        long routineHours = 0;
+                        for (boolean routine : routineTasksDone) if (!routine) routineHours += 1;
+                        timeLeftText.setText(WorkOrBreakTimer.formatMilliseconds(untilEnd - workLeftWithBreaks - routineHours * 3600_000));
+                        handler.postDelayed(this, 1000);
+                    }
+                }
+            }, 0);
         }
     }
-
     private void updateTimeDisplay(long millisUntilFinished) {
         timeLeftText.setText(WorkOrBreakTimer.formatMilliseconds(millisUntilFinished));
     }
@@ -151,6 +199,7 @@ public class WorkTimerFragment extends Fragment {
 
     private void onTick(long millisUntilFinished) {
         if (viewModel.isWorkTimer() && viewModel.getTaskSelected() != null) {
+
             long change = viewModel.getPreviousTimeRemaining() - millisUntilFinished;
             viewModel.getTaskSelected().timeSpent += change;
             viewModel.increaseTimeSpentTodayValue(change);

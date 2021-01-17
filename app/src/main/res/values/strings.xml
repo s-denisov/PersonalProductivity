@@ -9,4 +9,7 @@
     <string name="add_project">Add project</string>
     <string name="bottom_bar_work_timer_title">Timer</string>
     <string name="bottom_bar_task_list_title">Tasks</string>
+    <string name="checkbox_morning_prep">Morning prep</string>
+    <string name="checkbox_lunch_and_dinner">Lunch and dinner</string>
+    <string name="checkbox_exercise">Exercise</string>
 </resources>
