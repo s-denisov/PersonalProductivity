@@ -45,12 +45,14 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
             findTimeSpent(l);
             Log.d("project", item.getName() + " " + item.getCompletionStatus());
             switch (item.getCompletionStatus()) {
+                case TODO_LATER: ((RadioButton) view.findViewById(R.id.radio_todo_later)).setChecked(true); break;
                 case IN_PROGRESS: ((RadioButton) view.findViewById(R.id.radio_in_progress)).setChecked(true); break;
                 case COMPLETE: ((RadioButton) view.findViewById(R.id.radio_tick)).setChecked(true); break;
                 case FAILED: ((RadioButton) view.findViewById(R.id.radio_cross)).setChecked(true);
             }
             completionStatusGroup.setOnCheckedChangeListener((group, checkedId) -> {
                 switch (checkedId) {
+                    case R.id.radio_todo_later: item.setCompletionStatus(CompletionStatus.TODO_LATER); break;
                     case R.id.radio_in_progress: item.setCompletionStatus(CompletionStatus.IN_PROGRESS); break;
                     case R.id.radio_tick: item.setCompletionStatus(CompletionStatus.COMPLETE); break;
                     case R.id.radio_cross: item.setCompletionStatus(CompletionStatus.FAILED);

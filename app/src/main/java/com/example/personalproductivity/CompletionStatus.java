@@ -3,7 +3,7 @@ package com.example.personalproductivity;
 import androidx.room.TypeConverter;
 
 public enum CompletionStatus {
-    IN_PROGRESS, COMPLETE, FAILED;
+    TODO_LATER, IN_PROGRESS, COMPLETE, FAILED;
 
     @TypeConverter
     public static String fromCompletionStatus(CompletionStatus status) {
