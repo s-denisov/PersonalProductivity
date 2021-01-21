@@ -5,11 +5,13 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
@@ -30,8 +32,8 @@ public class WorkTimerFragment extends Fragment {
     private Button startStopButton;
     private Spinner taskChoice;
     private final String[] routineTaskReferences = { "morningPrepSelected", "lunchDinerSelected", "exerciseSelected" };
-    private final String dayReference = "WorkTimerFragment.daysSinceEpoch";
     private final boolean[] routineTasksDone = new boolean[routineTaskReferences.length];
+    private long targetWorkTime = 0;
 
     private void createNotification(String text) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), MainActivity.WORK_NOTIFICATION_CHANNEL_ID)
@@ -54,6 +56,7 @@ public class WorkTimerFragment extends Fragment {
         List<Task> adapterTasks = new ArrayList<>();
         ArrayAdapter<Task> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, adapterTasks);
         projectViewModel.getProjectDao().getTasksLastUsed().observe(getViewLifecycleOwner(), tasks -> {
+            for (Task task : tasks) Log.d("project", task.getName() + " " + task.getCompletionStatus());
             adapterTasks.clear();
             adapterTasks.addAll(tasks);
             adapter.notifyDataSetChanged();
@@ -61,11 +64,13 @@ public class WorkTimerFragment extends Fragment {
                 viewModel.setTaskSelected(null);
                 viewModel.setRecord(null);
             } else if (!adapterTasks.contains(viewModel.getTaskSelected())) {
+                taskChoice.setSelection(0);
                 viewModel.setTaskSelected(tasks.get(0));
                 viewModel.setRecord(new TaskTimeRecord(System.currentTimeMillis(), findDaysSinceEpoch(), tasks.get(0).id));
             }
             startStopButton.setEnabled(!adapterTasks.isEmpty());
             if (viewModel.getTaskSelected() != null) taskChoice.setSelection(adapter.getPosition(viewModel.getTaskSelected()));
+            Log.d("project", String.valueOf(viewModel.getTaskSelected()));
         });
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         taskChoice = view.findViewById(R.id.spinner_task_name);
@@ -74,10 +79,11 @@ public class WorkTimerFragment extends Fragment {
 
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                updateSelectedTask();
-                viewModel.setTaskSelected(adapterTasks.get(position));
-                viewModel.setRecord(new TaskTimeRecord(System.currentTimeMillis(),
-                        findDaysSinceEpoch(), viewModel.getTaskSelected().id));
+                updateSelectedTask(() -> {
+                    viewModel.setTaskSelected(adapterTasks.get(position));
+                    viewModel.setRecord(new TaskTimeRecord(System.currentTimeMillis(),
+                            findDaysSinceEpoch(), viewModel.getTaskSelected().id));
+                });
             }
 
             @Override
@@ -91,7 +97,7 @@ public class WorkTimerFragment extends Fragment {
         updateTimeDisplay(viewModel.getTimer().getTimeLeft());
 
         viewModel.getTimeSpentToday().observe(getViewLifecycleOwner(), millis ->
-                ((TextView) view.findViewById(R.id.text_time_today)).setText(WorkOrBreakTimer.toHoursMinutes(millis)));
+                ((TextView) view.findViewById(R.id.text_time_today)).setText(WorkOrBreakTimer.formatMilliseconds(millis)));
         projectViewModel.getProjectDao().getTaskRecordsByDay(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), records -> {
             viewModel.resetTimeSpentToday();
             for (TaskTimeRecord record : records) {
@@ -103,6 +109,7 @@ public class WorkTimerFragment extends Fragment {
 
         SharedPreferences sharedPref = requireActivity().getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
+        final String dayReference = "WorkTimerFragment.daysSinceEpoch";
         if (sharedPref.getLong(dayReference, -1) != findDaysSinceEpoch()) {
             for (String ref : routineTaskReferences) editor.putBoolean(ref, false);
             editor.putLong(dayReference, findDaysSinceEpoch());
@@ -122,29 +129,61 @@ public class WorkTimerFragment extends Fragment {
             });
         }
 
+        projectViewModel.getProjectDao().getDay(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), day -> {
+            if (day == null) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getActivity()));
+                builder.setTitle("Target work hours today");
+
+                FrameLayout dialogContainer = new FrameLayout(getActivity());
+                dialogContainer.setPadding(50, 5, 40, 5);
+                final EditText input = new EditText(getActivity());
+                input.setInputType(InputType.TYPE_CLASS_NUMBER);
+                dialogContainer.addView(input);
+                builder.setView(dialogContainer);
+
+                builder.setPositiveButton("Submit", (dialog, which) -> {
+                    projectViewModel.doAction(dao -> dao.insertDay(new Day(findDaysSinceEpoch(),
+                            (long) (Double.parseDouble(input.getText().toString()) * 3600_000))));
+                });
+                builder.show();
+
+            } else {
+                targetWorkTime = day.getTargetWorkTime();
+            }
+        });
+
         return view;
     }
 
-    private long findDaysSinceEpoch() {
+    public static long findDaysSinceEpoch() {
         return System.currentTimeMillis() / (24 * 3600 * 1000);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateSelectedTask(() -> {});
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        updateSelectedTask();
+        Log.d("project", "onPause");
+        updateSelectedTask(() -> {});
     }
 
-    private void updateSelectedTask() {
+    private void updateSelectedTask(Runnable afterUpdate) {
         if (viewModel.getTaskSelected() != null) {
             viewModel.getTaskSelected().lastUsed = System.currentTimeMillis();
             projectViewModel.doAction(dao -> {
                 dao.updateTask(viewModel.getTaskSelected());
-                if (viewModel.getRecord().getLength() > 0) {
+                if (viewModel.getRecord() != null && viewModel.getRecord().getLength() > 0) {
                     if (dao.insertTaskRecord(viewModel.getRecord()) == -1) {
                         dao.updateTaskRecord(viewModel.getRecord());
                     }
+                    Log.d("project", "updateTask");
                 }
+                afterUpdate.run();
             });
         }
     }
@@ -178,8 +217,9 @@ public class WorkTimerFragment extends Fragment {
                     if (!Objects.requireNonNull(viewModel.getTimerOn().getValue())) {
                         long untilEnd = Duration.between(LocalTime.now(), LocalTime.of(22, 0)).toMillis();
                         assert viewModel.getTimeSpentToday().getValue() != null;
-                        long workLeftToday = 7 * 3600_000 - viewModel.getTimeSpentToday().getValue();
-                        long workLeftWithBreaks = workLeftToday + 300_000 * (long) Math.ceil((double) workLeftToday / 1800_000);
+                        long workLeftToday = targetWorkTime - viewModel.getTimeSpentToday().getValue();
+                        long workLeftWithBreaks = workLeftToday + 300_000 *
+                                ((long) Math.ceil((double) workLeftToday / 1800_000) - 1);
                         long routineHours = 0;
                         for (boolean routine : routineTasksDone) if (!routine) routineHours += 1;
                         timeLeftText.setText(WorkOrBreakTimer.formatMilliseconds(untilEnd - workLeftWithBreaks - routineHours * 3600_000));
@@ -199,7 +239,6 @@ public class WorkTimerFragment extends Fragment {
 
     private void onTick(long millisUntilFinished) {
         if (viewModel.isWorkTimer() && viewModel.getTaskSelected() != null) {
-
             long change = viewModel.getPreviousTimeRemaining() - millisUntilFinished;
             viewModel.getTaskSelected().timeSpent += change;
             viewModel.increaseTimeSpentTodayValue(change);

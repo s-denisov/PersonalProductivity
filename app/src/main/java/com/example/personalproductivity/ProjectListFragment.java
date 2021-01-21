@@ -42,7 +42,7 @@ public class ProjectListFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview_projects);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        taskOrParentList.observe(Objects.requireNonNull(getActivity()), adapter::convertAndSubmitList);
+        taskOrParentList.observe(requireActivity(), adapter::convertAndSubmitList);
         view.findViewById(R.id.fab_create_project).setOnClickListener(this::createProject);
         return view;
     }
@@ -86,14 +86,6 @@ public class ProjectListFragment extends Fragment {
 
     private void setChildAsState(TaskOrParent newParent) {
         if (newParent instanceof Task) return;
-        /*
-        LiveData<? extends List<? extends TaskOrParent>> tasks = newParent.getChildren(viewModel.getProjectDao());
-        tasks.observe(Objects.requireNonNull(getActivity()), adapter::convertAndSubmitList);
-        switch (type) {
-            case PROJECT: type = TaskOrParentType.TASK_GROUP; break;
-            case TASK_GROUP: type = TaskOrParentType.TASK;
-        }*/
-
         NavHostFragment n = (NavHostFragment) Objects.requireNonNull(getActivity()).getSupportFragmentManager()
                 .findFragmentById(R.id.nav_host_fragment);
         assert n != null;

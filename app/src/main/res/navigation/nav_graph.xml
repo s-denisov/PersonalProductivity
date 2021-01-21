@@ -6,12 +6,18 @@
     <fragment
         android:id="@+id/work_timer_fragment"
         android:name="com.example.personalproductivity.WorkTimerFragment"
-        android:label="WorkTimerFragment"
+        android:label="Work Timer"
         tools:layout="@layout/fragment_work_timer" />
     <fragment
             android:id="@+id/project_list_fragment"
             android:name="com.example.personalproductivity.ProjectListFragment"
-            android:label="ProjectListFragment"
+            android:label="Project List"
             tools:layout="@layout/fragment_project_list">
+    </fragment>
+    <fragment
+            android:id="@+id/task_statistics_fragment"
+            android:name="com.example.personalproductivity.TaskStatisticsFragment"
+            android:label="Task Statistics"
+            tools:layout="@layout/fragment_task_statistics">
     </fragment>
 </navigation>

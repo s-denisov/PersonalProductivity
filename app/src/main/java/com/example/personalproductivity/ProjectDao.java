@@ -23,6 +23,13 @@ public interface ProjectDao {
     @Query("SELECT * FROM Task WHERE completionStatus='IN_PROGRESS' ORDER BY lastUsed DESC")
     LiveData<List<Task>> getTasksLastUsed();
 
+    @Query("SELECT * FROM Project WHERE name=" +
+            "(SELECT parentProjectName FROM TaskGroup WHERE id=(SELECT parentTaskGroupId FROM Task WHERE id=:taskId))")
+    LiveData<Project> getProjectFromTask(int taskId);
+
+    @Query("SELECT * FROM Task WHERE id=:id")
+    LiveData<Task> getTask(int id);
+
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertProject(Project project);
@@ -54,4 +61,11 @@ public interface ProjectDao {
     
     @Query("SELECT * FROM TaskTimeRecord WHERE daysSinceEpoch=:daysSinceEpoch")
     LiveData<List<TaskTimeRecord>> getTaskRecordsByDay(long daysSinceEpoch);
+
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertDay(Day day);
+
+    @Query("SELECT * FROM Day where daysSinceEpoch=:daysSinceEpoch")
+    LiveData<Day> getDay(long daysSinceEpoch);
 }

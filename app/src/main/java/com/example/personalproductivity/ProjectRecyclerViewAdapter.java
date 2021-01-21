@@ -1,6 +1,5 @@
 package com.example.personalproductivity;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,7 +42,22 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
             List<TaskOrParent> l = new ArrayList<>();
             l.add(item);
             findTimeSpent(l);
-            Log.d("project", item.getName() + " " + item.getCompletionStatus());
+            RadioButton[] radios = { view.findViewById(R.id.radio_todo_later), view.findViewById(R.id.radio_in_progress),
+                                    view.findViewById(R.id.radio_tick), view.findViewById(R.id.radio_cross) };
+            CompletionStatus[] statuses = { CompletionStatus.TODO_LATER, CompletionStatus.IN_PROGRESS,
+                                    CompletionStatus.COMPLETE, CompletionStatus.FAILED };
+
+            for (int i = 0; i < statuses.length; i++) {
+                if (item.getCompletionStatus() == statuses[i]) radios[i].setChecked(true);
+                int finalI = i;
+                radios[i].setOnClickListener(v -> {
+                    item.setCompletionStatus(statuses[finalI]);
+                    if (item instanceof Project) viewModel.doAction(dao -> dao.updateProject((Project) item));
+                    if (item instanceof TaskGroup) viewModel.doAction(dao -> dao.updateTaskGroup((TaskGroup) item));
+                    if (item instanceof Task) viewModel.doAction(dao -> dao.updateTask((Task) item));
+                });
+            }
+            /*
             switch (item.getCompletionStatus()) {
                 case TODO_LATER: ((RadioButton) view.findViewById(R.id.radio_todo_later)).setChecked(true); break;
                 case IN_PROGRESS: ((RadioButton) view.findViewById(R.id.radio_in_progress)).setChecked(true); break;
@@ -57,10 +71,11 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
                     case R.id.radio_tick: item.setCompletionStatus(CompletionStatus.COMPLETE); break;
                     case R.id.radio_cross: item.setCompletionStatus(CompletionStatus.FAILED);
                 }
+//                Log.d("project", item.getName() + " checkedChange " + item.getCompletionStatus());
                 if (item instanceof Project) viewModel.doAction(dao -> dao.updateProject((Project) item));
                 if (item instanceof TaskGroup) viewModel.doAction(dao -> dao.updateTaskGroup((TaskGroup) item));
                 if (item instanceof Task) viewModel.doAction(dao -> dao.updateTask((Task) item));
-            });
+            });*/
         }
 
         private void findTimeSpent(List<? extends TaskOrParent> taskOrParentList) {

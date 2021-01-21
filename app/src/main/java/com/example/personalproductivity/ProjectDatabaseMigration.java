@@ -28,6 +28,11 @@ public class ProjectDatabaseMigration {
                     database.execSQL("CREATE TABLE TaskTimeRecord (startTimeStamp INTEGER NOT NULL," +
                             " daysSinceEpoch INTEGER NOT NULL, length INTEGER NOT NULL, taskId INTEGER NOT NULL, PRIMARY KEY(startTimeStamp))");
                 }
+            }, new Migration(4, 5) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("CREATE TABLE Day (daysSinceEpoch INTEGER NOT NULL, targetWorkTime INTEGER NOT NULL, PRIMARY KEY(daysSinceEpoch))");
+                }
             }
     };
 }

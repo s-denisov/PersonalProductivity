@@ -59,5 +59,4 @@ public class Task implements TaskOrParent {
     public String toString() {
         return name;
     }
-
 }

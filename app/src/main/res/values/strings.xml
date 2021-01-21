@@ -12,4 +12,5 @@
     <string name="checkbox_morning_prep">Morning prep</string>
     <string name="checkbox_lunch_and_dinner">Lunch and dinner</string>
     <string name="checkbox_exercise">Exercise</string>
+    <string name="bottom_bar_stats_title">Stats</string>
 </resources>
