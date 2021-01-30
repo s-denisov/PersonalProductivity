@@ -31,13 +31,13 @@ public interface ProjectDao {
     LiveData<Task> getTask(int id);
 
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertProject(Project project);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertTaskGroup(TaskGroup taskGroup);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertTask(Task task);
 
 
@@ -65,6 +65,9 @@ public interface ProjectDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertDay(Day day);
+
+    @Update
+    void updateDay(Day day);
 
     @Query("SELECT * FROM Day where daysSinceEpoch=:daysSinceEpoch")
     LiveData<Day> getDay(long daysSinceEpoch);

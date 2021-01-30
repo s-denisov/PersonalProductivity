@@ -13,6 +13,7 @@ public class TaskTimeRecord {
     @NonNull private long daysSinceEpoch;
     private long length = 0;
     @NonNull private int taskId;
+    @NonNull private boolean privateStudy;
 
     public void addMilliseconds(long milliseconds) {
         length += milliseconds;

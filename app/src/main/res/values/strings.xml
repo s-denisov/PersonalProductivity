@@ -13,4 +13,10 @@
     <string name="checkbox_lunch_and_dinner">Lunch and dinner</string>
     <string name="checkbox_exercise">Exercise</string>
     <string name="bottom_bar_stats_title">Stats</string>
+    <string name="private_study_checkbox">Private study</string>
+    <string name="button_toggle_mode">Toggle</string>
+    <string name="button_previous">P</string>
+    <string name="button_next">N</string>
+    <string name="button_increase">+</string>
+    <string name="button_decrease">-</string>
 </resources>

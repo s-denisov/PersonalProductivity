@@ -15,6 +15,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -38,26 +39,20 @@ public class ProjectListFragment extends Fragment {
                 parent == null ? viewModel.getProjects() : parent.getChildren(viewModel.getProjectDao());
         ProjectRecyclerViewAdapter adapter =
                 new ProjectRecyclerViewAdapter(new ProjectRecyclerViewAdapter.ProjectDiff(), this::setChildAsState,
-                        getViewLifecycleOwner(), viewModel);
+                        this::editItem, getViewLifecycleOwner(), viewModel);
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview_projects);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         taskOrParentList.observe(requireActivity(), adapter::convertAndSubmitList);
-        view.findViewById(R.id.fab_create_project).setOnClickListener(this::createProject);
+        view.findViewById(R.id.fab_create_project).setOnClickListener(this::createItem);
         return view;
     }
 
-    public void createProject(View v) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getActivity()));
+    public void createItem(View v) {
+        AbstractMap.SimpleEntry<EditText, AlertDialog.Builder> values = createDialogBuilder();
+        AlertDialog.Builder builder = values.getValue();
         builder.setTitle("New " + type);
-
-        FrameLayout container = new FrameLayout(getActivity());
-        container.setPadding(50, 5, 40, 5);
-        final EditText input = new EditText(getActivity());
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        input.setHint(type.toString().substring(0, 1).toUpperCase(Locale.ROOT) + type.toString().substring(1) + " name");
-        container.addView(input);
-        builder.setView(container);
+        EditText input = values.getKey();
 
         builder.setPositiveButton("Submit", (dialog, which) -> {
             switch (type) {
@@ -79,9 +74,40 @@ public class ProjectListFragment extends Fragment {
                     viewModel.doAction(dao -> dao.insertTask(newTask));
             }
         });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 
         builder.show();
+    }
+
+    private void editItem(TaskOrParent item) {
+        AbstractMap.SimpleEntry<EditText, AlertDialog.Builder> values = createDialogBuilder();
+        AlertDialog.Builder builder = values.getValue();
+        builder.setTitle("Edit " + type);
+        EditText input = values.getKey();
+        input.setText(item.getName());
+
+        builder.setPositiveButton("Submit", (dialog, which) -> {
+            item.setName(input.getText().toString());
+            switch (type) {
+                case PROJECT: viewModel.doAction(dao -> dao.updateProject((Project) item)); break;
+                case TASK_GROUP: viewModel.doAction(dao -> dao.updateTaskGroup((TaskGroup) item)); break;
+                case TASK: viewModel.doAction(dao -> dao.updateTask((Task) item)); break;
+            }
+        });
+
+        builder.show();
+    }
+
+    private AbstractMap.SimpleEntry<EditText, AlertDialog.Builder> createDialogBuilder() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getActivity()));
+        FrameLayout container = new FrameLayout(getActivity());
+        container.setPadding(50, 5, 40, 5);
+        final EditText input = new EditText(getActivity());
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setHint(type.toString().substring(0, 1).toUpperCase(Locale.ROOT) + type.toString().substring(1) + " name");
+        container.addView(input);
+        builder.setView(container);
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        return new AbstractMap.SimpleEntry<>(input, builder);
     }
 
     private void setChildAsState(TaskOrParent newParent) {

@@ -33,6 +33,16 @@ public class ProjectDatabaseMigration {
                 public void migrate(@NonNull SupportSQLiteDatabase database) {
                     database.execSQL("CREATE TABLE Day (daysSinceEpoch INTEGER NOT NULL, targetWorkTime INTEGER NOT NULL, PRIMARY KEY(daysSinceEpoch))");
                 }
+            }, new Migration(5, 6) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("ALTER TABLE Day ADD COLUMN schoolTime INTEGER NOT NULL DEFAULT 0");
+                }
+            }, new Migration(6, 7) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("ALTER TABLE TaskTimeRecord ADD COLUMN privateStudy INTEGER NOT NULL DEFAULT 0");
+                }
             }
     };
 }

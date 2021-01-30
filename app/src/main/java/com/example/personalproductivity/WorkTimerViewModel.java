@@ -40,8 +40,8 @@ public class WorkTimerViewModel extends ViewModel {
         return timeSpentToday;
     }
 
-    public void resetTimeSpentToday() {
-        timeSpentToday.setValue(0L);
+    public void setTimeSpentTodayValue(long millis) {
+        timeSpentToday.setValue(millis);
     }
 
     public void increaseTimeSpentTodayValue(long increase) {

@@ -4,7 +4,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,7 +24,6 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
         private final View view;
         private final TextView nameText;
         private final TextView timeSpentText;
-        private final RadioGroup completionStatusGroup;
         private long timeSpent = 0;
 
         public ViewHolder(View view) {
@@ -33,12 +31,15 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
             this.view = view;
             nameText = view.findViewById(R.id.text_name);
             timeSpentText = view.findViewById(R.id.text_time_spent);
-            completionStatusGroup = view.findViewById(R.id.radio_group_completion_status);
         }
 
         public void bind(TaskOrParent item) {
             nameText.setText(item.getName());
             view.setOnClickListener(v -> setListState.accept(item));
+            view.setOnLongClickListener(v -> {
+                editName.accept(item);
+                return true;
+            });
             List<TaskOrParent> l = new ArrayList<>();
             l.add(item);
             findTimeSpent(l);
@@ -57,25 +58,6 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
                     if (item instanceof Task) viewModel.doAction(dao -> dao.updateTask((Task) item));
                 });
             }
-            /*
-            switch (item.getCompletionStatus()) {
-                case TODO_LATER: ((RadioButton) view.findViewById(R.id.radio_todo_later)).setChecked(true); break;
-                case IN_PROGRESS: ((RadioButton) view.findViewById(R.id.radio_in_progress)).setChecked(true); break;
-                case COMPLETE: ((RadioButton) view.findViewById(R.id.radio_tick)).setChecked(true); break;
-                case FAILED: ((RadioButton) view.findViewById(R.id.radio_cross)).setChecked(true);
-            }
-            completionStatusGroup.setOnCheckedChangeListener((group, checkedId) -> {
-                switch (checkedId) {
-                    case R.id.radio_todo_later: item.setCompletionStatus(CompletionStatus.TODO_LATER); break;
-                    case R.id.radio_in_progress: item.setCompletionStatus(CompletionStatus.IN_PROGRESS); break;
-                    case R.id.radio_tick: item.setCompletionStatus(CompletionStatus.COMPLETE); break;
-                    case R.id.radio_cross: item.setCompletionStatus(CompletionStatus.FAILED);
-                }
-//                Log.d("project", item.getName() + " checkedChange " + item.getCompletionStatus());
-                if (item instanceof Project) viewModel.doAction(dao -> dao.updateProject((Project) item));
-                if (item instanceof TaskGroup) viewModel.doAction(dao -> dao.updateTaskGroup((TaskGroup) item));
-                if (item instanceof Task) viewModel.doAction(dao -> dao.updateTask((Task) item));
-            });*/
         }
 
         private void findTimeSpent(List<? extends TaskOrParent> taskOrParentList) {
@@ -109,14 +91,16 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
     }
 
     private final Consumer<TaskOrParent> setListState;
+    private final Consumer<TaskOrParent> editName;
     private final LifecycleOwner owner;
     private final ProjectViewModel viewModel;
 
     public ProjectRecyclerViewAdapter(@NonNull DiffUtil.ItemCallback<TaskOrParent> diffCallback,
-                                      Consumer<TaskOrParent> setListState, LifecycleOwner owner,
+                                      Consumer<TaskOrParent> setListState, Consumer<TaskOrParent> editName, LifecycleOwner owner,
                                       ProjectViewModel viewModel) {
         super(diffCallback);
         this.setListState = setListState;
+        this.editName = editName;
         this.owner = owner;
         this.viewModel = viewModel;
     }

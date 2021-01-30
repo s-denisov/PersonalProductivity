@@ -1,29 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                                   xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-                                                   android:layout_height="match_parent">
-    <com.github.mikephil.charting.charts.BarChart android:id="@+id/bar_chart_tasks"
-                                                  android:layout_width="0dp"
-                                                  android:layout_height="0dp"
-                                                  app:layout_constraintStart_toStartOf="parent"
-                                                  app:layout_constraintTop_toBottomOf="@+id/button_next"
-                                                  app:layout_constraintEnd_toEndOf="parent"
-                                                  app:layout_constraintBottom_toBottomOf="parent"/>
+
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <FrameLayout android:id="@+id/frame_chart"
+                 android:layout_width="0dp"
+                 android:layout_height="0dp"
+                 app:layout_constraintStart_toStartOf="parent"
+                 app:layout_constraintTop_toBottomOf="@+id/button_next"
+                 app:layout_constraintEnd_toEndOf="parent"
+                 app:layout_constraintBottom_toBottomOf="parent">
+    </FrameLayout>
+    <com.google.android.material.tabs.TabLayout android:layout_height="wrap_content"
+                                                android:layout_width="wrap_content" android:id="@+id/tab_chart_type"
+                                                app:layout_constraintTop_toTopOf="parent"
+                                                app:layout_constraintEnd_toEndOf="parent"
+                                                app:layout_constraintStart_toStartOf="parent"/>
     <Button
-            android:text="Previous"
+            android:text="@string/button_previous"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:id="@+id/button_previous"
-            app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginTop="4dp" android:layout_marginStart="16dp"/>
+            app:layout_constraintStart_toStartOf="parent" android:minHeight="0dp" android:minWidth="0dp"
+            android:layout_marginStart="16dp" app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="4dp"/>
     <Button
-            android:text="Next"
-            android:layout_width="wrap_content"
+            android:text="@string/button_next"
+            android:layout_width="wrap_content" android:minHeight="0dp" android:minWidth="0dp"
             android:layout_height="wrap_content" android:id="@+id/button_next"
-            app:layout_constraintStart_toEndOf="@+id/button_previous" app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="4dp" android:layout_marginStart="16dp"/>
+            app:layout_constraintTop_toTopOf="@+id/button_previous"
+            app:layout_constraintStart_toEndOf="@+id/button_previous" android:layout_marginStart="4dp"/>
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:id="@+id/text_total_hours"
             app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="8dp" android:layout_marginEnd="8dp"/>
+            android:layout_marginTop="8dp" android:layout_marginEnd="8dp" tools:text="12h"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
