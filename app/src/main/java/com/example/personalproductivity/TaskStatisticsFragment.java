@@ -14,6 +14,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.*;
@@ -21,9 +23,12 @@ import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.android.material.tabs.TabLayout;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -41,7 +46,8 @@ public class TaskStatisticsFragment extends Fragment {
     private View view;
     private BarChart chart;
     private ProjectDao dao;
-    private TextView totalHoursText;
+    private TextView weekTotalText;
+    private TextView dateText;
     private long daysBeforeCurrent = 0;
 
     @Nullable
@@ -49,18 +55,16 @@ public class TaskStatisticsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_task_statistics, container, false);
         dao = new ViewModelProvider(this).get(ProjectViewModel.class).getProjectDao();
-        totalHoursText = view.findViewById(R.id.text_total_hours);
+        weekTotalText = view.findViewById(R.id.text_week_total);
+        dateText = view.findViewById(R.id.text_date);
 
         TabLayout chartType = view.findViewById(R.id.tab_chart_type);
-        TabLayout.Tab record = chartType.newTab().setText("Record");
-        TabLayout.Tab target = chartType.newTab().setText("Target");
-        chartType.addTab(record);
-        chartType.addTab(target);
         chartType.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                if (tab == record) createRecordChart();
-                else createTargetChart();
+                if (Objects.equals(tab.getText(), getString(R.string.record_tab))) createRecordChart();
+                else if (Objects.equals(tab.getText(), getString(R.string.target_tab))) createTargetChart();
+                else createWorkList();
             }
 
             @Override
@@ -90,16 +94,7 @@ public class TaskStatisticsFragment extends Fragment {
         chart.getAxisRight().setAxisMaximum(10);
         chart.getLegend().setWordWrapEnabled(true);
         chart.getDescription().setEnabled(false);
-
-        updateRecordChart();
-        view.findViewById(R.id.button_previous).setOnClickListener(v -> {
-            daysBeforeCurrent += 7;
-            updateRecordChart();
-        });
-        view.findViewById(R.id.button_next).setOnClickListener(v -> {
-            daysBeforeCurrent -= 7;
-            updateRecordChart();
-        });
+        manageWeekChanges(true, this::updateRecordChart);
     }
 
     private void updateRecordChart() {
@@ -131,16 +126,12 @@ public class TaskStatisticsFragment extends Fragment {
             dataSet.setStackLabels(Stream.concat(Stream.of("School"), projects.stream().map(Project::getName)).toArray(String[]::new));
             chart.invalidate();
             MutableLiveData<Float> totalHours = new MutableLiveData<>(0f);
-            totalHours.observe(getViewLifecycleOwner(), hours -> totalHoursText.setText(formatHours(hours) + " h"));
-            long day = WorkTimerFragment.findDaysSinceEpoch() - daysBeforeCurrent;
-            while (day % 7 != 4) { // day % 7 == 4 means day is Monday
-                day--;
-            }
+            totalHours.observe(getViewLifecycleOwner(), hours -> weekTotalText.setText(formatHours(hours) + " h"));
+            long day = findPreviousMonday();
             for (int i = 0; i < 7; i++) {
                 int daysSinceStart = i;
-                long day2 = day;
                 dao.getTaskRecordsByDay(day + i).observe(getViewLifecycleOwner(), records -> dao.getDay(
-                        day2 + daysSinceStart).observe(getViewLifecycleOwner(), dayData -> {
+                        day + daysSinceStart).observe(getViewLifecycleOwner(), dayData -> {
                     float[] projectTimes = new float[projects.size() + 1];
                     Arrays.fill(projectTimes, 0);
                     if (dayData != null) {
@@ -186,17 +177,7 @@ public class TaskStatisticsFragment extends Fragment {
         timeChart.getLegend().setEnabled(false);
         timeChart.getDescription().setEnabled(false);
         layout.addView(timeChart);
-
-        view.findViewById(R.id.button_previous).setOnClickListener(v -> {
-            daysBeforeCurrent += 7;
-            updateTargetChart(timeChart);
-        });
-        view.findViewById(R.id.button_next).setOnClickListener(v -> {
-            daysBeforeCurrent -= 7;
-            updateTargetChart(timeChart);
-        });
-
-        updateTargetChart(timeChart);
+        manageWeekChanges(true, () -> updateTargetChart(timeChart));
     }
 
     private void updateTargetChart(LineChart timeChart) {
@@ -212,17 +193,13 @@ public class TaskStatisticsFragment extends Fragment {
         LineData data = new LineData(dataSets);
         timeChart.setData(data);
 
-        long day = WorkTimerFragment.findDaysSinceEpoch() - daysBeforeCurrent;
-        while (day % 7 != 4) { // day % 7 == 4 means day is Monday
-            day--;
-        }
+        long day = findPreviousMonday();
         AtomicReference<Float> totalMillisWorked = new AtomicReference<>(0f);
         AtomicLong totalMillisAvailable = new AtomicLong(0);
         for (int i = 0; i < 7; i++) {
             int daysSinceStart = i;
-            long day2 = day;
             dao.getTaskRecordsByDay(day + i).observe(getViewLifecycleOwner(), records -> dao.getDay(
-                    day2 + daysSinceStart).observe(getViewLifecycleOwner(), dayData -> { if (dayData == null) return;
+                    day + daysSinceStart).observe(getViewLifecycleOwner(), dayData -> { if (dayData == null) return;
                 long millisWorked = 0;
                 for (TaskTimeRecord record : records) millisWorked += record.getLength();
                 float adjustedMillisWorked = 7.0f / 6 * dayData.subtractPrivateStudy(millisWorked);
@@ -244,8 +221,61 @@ public class TaskStatisticsFragment extends Fragment {
 
                 totalMillisWorked.set(totalMillisWorked.get() + adjustedMillisWorked);
                 totalMillisAvailable.addAndGet(dayData.getTargetWorkTime());
-                totalHoursText.setText(String.format("%.1f", 100 * totalMillisWorked.get() / totalMillisAvailable.get()) + "%");
+                weekTotalText.setText(String.format("%.1f", 100 * totalMillisWorked.get() / totalMillisAvailable.get()) + "%");
             }));
         }
+    }
+
+    private void createWorkList() {
+        FrameLayout layout = view.findViewById(R.id.frame_chart);
+        layout.removeAllViews();
+        weekTotalText.setText("");
+        RecyclerView recyclerView = new RecyclerView(requireContext());
+        layout.addView(recyclerView);
+        TaskRecordRecyclerViewAdapter adapter = new TaskRecordRecyclerViewAdapter(getViewLifecycleOwner(), dao);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        manageWeekChanges(false, () -> updateWorkList(adapter));
+    }
+
+    private void updateWorkList(TaskRecordRecyclerViewAdapter adapter) {
+        dao.getTaskRecordsByDay(WorkTimerFragment.findDaysSinceEpoch() - daysBeforeCurrent)
+                .observe(requireActivity(), adapter::submitList);
+    }
+
+    private String formatDate(long daysSinceEpoch) {
+        return LocalDate.ofEpochDay(daysSinceEpoch).format(DateTimeFormatter.ofPattern("dd/MM/yy"));
+    }
+
+    private long findPreviousMonday() {
+        long day = WorkTimerFragment.findDaysSinceEpoch() - daysBeforeCurrent;
+        while (day % 7 != 4) { // day % 7 == 4 means day is Monday
+            day--;
+        }
+        return day;
+    }
+
+    private void manageWeekChanges(boolean updateWeek, Runnable after) {
+        int change = updateWeek ? 7 : 1;
+        updateWeekTitle(updateWeek);
+        after.run();
+        view.findViewById(R.id.button_previous).setOnClickListener(v -> {
+            daysBeforeCurrent += change;
+            updateWeekTitle(updateWeek);
+            after.run();
+        });
+        view.findViewById(R.id.button_next).setOnClickListener(v -> {
+            daysBeforeCurrent -= change;
+            updateWeekTitle(updateWeek);
+            after.run();
+        });
+    }
+
+
+    private void updateWeekTitle(boolean updateWeek) {
+        long firstDay = updateWeek ? findPreviousMonday() : WorkTimerFragment.findDaysSinceEpoch() - daysBeforeCurrent;
+        String result = formatDate(firstDay);
+        if (updateWeek) result += " - " + formatDate(firstDay + 6);
+        dateText.setText(result);
     }
 }

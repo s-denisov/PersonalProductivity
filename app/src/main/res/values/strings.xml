@@ -19,4 +19,8 @@
     <string name="button_next">N</string>
     <string name="button_increase">+</string>
     <string name="button_decrease">-</string>
+    <string name="target_tab">Target</string>
+    <string name="record_tab">Record</string>
+    <string name="work_list_tab">Work</string>
+    <string name="btn_sleep_text">Sleep</string>
 </resources>

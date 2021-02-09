@@ -8,7 +8,7 @@
                                    android:layout_margin="8dp">
     <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent"
                                                        android:layout_height="match_parent">
-        <TextView android:textSize="16sp" android:textStyle="bold" android:layout_width="match_parent"
+        <TextView style="@style/CardTitle" android:layout_width="match_parent"
                   android:layout_height="wrap_content" android:id="@+id/text_name" tools:text="Task"
                   android:paddingStart="5dp" android:paddingEnd="5dp"
                   card_view:layout_constraintTop_toTopOf="parent"

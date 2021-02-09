@@ -22,7 +22,8 @@ import java.util.Objects;
 
 public class ProjectListFragment extends Fragment {
 
-    private ProjectViewModel viewModel;
+    private ProjectListFragment viewModel;
+    private ProjectViewModel projectViewModel;
     private TaskOrParentType type;
     private TaskOrParent parent;
 
@@ -34,12 +35,13 @@ public class ProjectListFragment extends Fragment {
                 parent instanceof Project ? TaskOrParentType.TASK_GROUP : TaskOrParentType.TASK;
 
         View view = inflater.inflate(R.layout.fragment_project_list, container, false);
-        viewModel = new ViewModelProvider(Objects.requireNonNull(getActivity())).get(ProjectViewModel.class);
+//        viewModel = new ViewModelProvider(Objects.requireNonNull(getActivity())).get(ProjectListViewModel.class);
+        projectViewModel = new ViewModelProvider(requireActivity()).get(ProjectViewModel.class);
         LiveData<? extends List<? extends TaskOrParent>> taskOrParentList =
-                parent == null ? viewModel.getProjects() : parent.getChildren(viewModel.getProjectDao());
+                parent == null ? projectViewModel.getProjects() : parent.getChildren(projectViewModel.getProjectDao());
         ProjectRecyclerViewAdapter adapter =
                 new ProjectRecyclerViewAdapter(new ProjectRecyclerViewAdapter.ProjectDiff(), this::setChildAsState,
-                        this::editItem, getViewLifecycleOwner(), viewModel);
+                        this::editItem, getViewLifecycleOwner(), projectViewModel);
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview_projects);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -59,19 +61,20 @@ public class ProjectListFragment extends Fragment {
                 case PROJECT:
                     Project newProject = new Project();
                     newProject.setName(input.getText().toString());
-                    viewModel.doAction(dao -> dao.insertProject(newProject));
+                    projectViewModel.doAction(dao -> dao.insertProject(newProject));
                     break;
                 case TASK_GROUP:
                     TaskGroup newTaskGroup = new TaskGroup();
                     newTaskGroup.setName(input.getText().toString());
                     if (parent instanceof Project) newTaskGroup.parentProjectName = parent.getName();
-                    viewModel.doAction(dao -> dao.insertTaskGroup(newTaskGroup));
+                    projectViewModel.doAction(dao -> dao.insertTaskGroup(newTaskGroup));
                     break;
                 case TASK:
                     Task newTask = new Task();
                     newTask.setName(input.getText().toString());
                     if (parent instanceof TaskGroup) newTask.parentTaskGroupId = ((TaskGroup) parent).id;
-                    viewModel.doAction(dao -> dao.insertTask(newTask));
+                    projectViewModel.doAction(dao -> dao.insertTask(newTask));
+                    break;
             }
         });
 
@@ -88,9 +91,9 @@ public class ProjectListFragment extends Fragment {
         builder.setPositiveButton("Submit", (dialog, which) -> {
             item.setName(input.getText().toString());
             switch (type) {
-                case PROJECT: viewModel.doAction(dao -> dao.updateProject((Project) item)); break;
-                case TASK_GROUP: viewModel.doAction(dao -> dao.updateTaskGroup((TaskGroup) item)); break;
-                case TASK: viewModel.doAction(dao -> dao.updateTask((Task) item)); break;
+                case PROJECT: projectViewModel.doAction(dao -> dao.updateProject((Project) item)); break;
+                case TASK_GROUP: projectViewModel.doAction(dao -> dao.updateTaskGroup((TaskGroup) item)); break;
+                case TASK: projectViewModel.doAction(dao -> dao.updateTask((Task) item)); break;
             }
         });
 

@@ -35,11 +35,15 @@ public class WorkTimerFragment extends Fragment {
     private Spinner taskChoice;
     private CheckBox privateStudyBox;
 
+    private Day day;
+    private SharedPreferences sharedPref;
+    private SharedPreferences.Editor editor;
     private final String[] routineTaskReferences = { "morningPrepSelected", "lunchDinerSelected", "exerciseSelected" };
+    private final String sleepReference = "sleeping";
     private final long[] routineTimes = { 3600_000, 1800_000, 3600_000 };
     private final boolean[] routineTasksDone = new boolean[routineTaskReferences.length];
     private long adjustedTargetWorkTime = 0;
-    public static final double TARGET_WORK_PROPORTION = 0.65;
+    public static final double TARGET_WORK_PROPORTION = 0.35;
 
     private void createNotification(String text) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), MainActivity.WORK_NOTIFICATION_CHANNEL_ID)
@@ -116,7 +120,8 @@ public class WorkTimerFragment extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) { }
         });
 
-        projectViewModel.getProjectDao().getDay(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), day -> {
+        projectViewModel.getProjectDao().getDay(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), dayData -> {
+            day = dayData;
             if (day == null) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getActivity()));
                 builder.setTitle("Hours in school today");
@@ -162,11 +167,22 @@ public class WorkTimerFragment extends Fragment {
         viewModel.getTimeSpentToday().observe(getViewLifecycleOwner(), millis ->
                 ((TextView) view.findViewById(R.id.text_time_today)).setText(WorkOrBreakTimer.toHoursMinutes(millis)));
 
-        SharedPreferences sharedPref = requireActivity().getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
+        sharedPref = requireActivity().getPreferences(Context.MODE_PRIVATE);
+        editor = sharedPref.edit();
         final String dayReference = "WorkTimerFragment.daysSinceEpoch";
+        
         if (sharedPref.getLong(dayReference, -1) != findDaysSinceEpoch()) {
             for (String ref : routineTaskReferences) editor.putBoolean(ref, false);
+            if (!sharedPref.getBoolean(sleepReference, false)) {
+                projectViewModel.getProjectDao().getDay(findDaysSinceEpoch() - 1)
+                        .observe(getViewLifecycleOwner(), previous -> {
+                    if (previous != null) {
+                        previous.setTargetWorkTime(previous.getTargetWorkTime() + 7200_000);
+                        projectViewModel.doAction(dao -> dao.updateDay(previous));
+                    }
+                });
+            }
+            editor.putBoolean(sleepReference, false);
             editor.putLong(dayReference, findDaysSinceEpoch());
             editor.apply();
         }
@@ -184,7 +200,7 @@ public class WorkTimerFragment extends Fragment {
             });
         }
 
-
+        // Schedule.schedule(LocalTime.of(9, 0).toSecondOfDay() * 1000L, 7 * 3600_000);
         return view;
     }
 
@@ -258,6 +274,17 @@ public class WorkTimerFragment extends Fragment {
                 public void run() {
                     if (!Objects.requireNonNull(viewModel.getTimerOn().getValue())) {
                         long untilEnd = Duration.between(LocalTime.now(), LocalTime.of(22, 0)).toMillis();
+                        if (untilEnd < 0) {
+                            startStopButton.setText("Sleep");
+                            startStopButton.setEnabled(!sharedPref.getBoolean(sleepReference, false));
+                            startStopButton.setOnClickListener(view -> {
+                               day.setTargetWorkTime(day.getTargetWorkTime() - untilEnd);
+                               projectViewModel.doAction(dao -> dao.updateDay(day));
+                               editor.putBoolean(sleepReference, true);
+                               editor.apply();
+                               startStopButton.setEnabled(false);
+                           });
+                        }
                         assert viewModel.getTimeSpentToday().getValue() != null;
                         long workLeftToday = adjustedTargetWorkTime - viewModel.getTimeSpentToday().getValue();
                         long workLeftWithBreaks = workLeftToday + 300_000 *
