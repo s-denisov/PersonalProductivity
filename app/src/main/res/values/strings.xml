@@ -23,4 +23,12 @@
     <string name="record_tab">Record</string>
     <string name="work_list_tab">Work</string>
     <string name="btn_sleep_text">Sleep</string>
+    <string name="event_list">Events</string>
+    <string name="project_list">Projects</string>
+    <string name="event_name">Event name</string>
+    <string name="submit">Submit</string>
+    <string name="event_date">Event date</string>
+    <string name="event_time_start">Event start</string>
+    <string name="event_time_end">Event end</string>
+    <string name="show_schedule">Schedule</string>
 </resources>

@@ -232,15 +232,17 @@ public class TaskStatisticsFragment extends Fragment {
         weekTotalText.setText("");
         RecyclerView recyclerView = new RecyclerView(requireContext());
         layout.addView(recyclerView);
-        TaskRecordRecyclerViewAdapter adapter = new TaskRecordRecyclerViewAdapter(getViewLifecycleOwner(), dao);
+        TimeRangeItemAdapter adapter = new TimeRangeItemAdapter((recordTask, record) ->
+                dao.getTask(((TaskTimeRecord) record).getTaskId()).observe(getViewLifecycleOwner(), task -> recordTask.setText(task.getName())),
+                (task) -> {});
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         manageWeekChanges(false, () -> updateWorkList(adapter));
     }
 
-    private void updateWorkList(TaskRecordRecyclerViewAdapter adapter) {
+    private void updateWorkList(TimeRangeItemAdapter adapter) {
         dao.getTaskRecordsByDay(WorkTimerFragment.findDaysSinceEpoch() - daysBeforeCurrent)
-                .observe(requireActivity(), adapter::submitList);
+                .observe(requireActivity(), adapter::convertAndSubmitList);
     }
 
     private String formatDate(long daysSinceEpoch) {

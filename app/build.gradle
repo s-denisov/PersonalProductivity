@@ -5,13 +5,17 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
+
         applicationId "com.example.personalproductivity"
-        minSdkVersion 24
+        minSdkVersion 26
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildFeatures {
+        viewBinding true
     }
 
     buildTypes {
@@ -51,4 +55,6 @@ dependencies {
     implementation "androidx.navigation:navigation-ui:$nav_version"
 
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
+    apply plugin: "androidx.navigation.safeargs"
 }

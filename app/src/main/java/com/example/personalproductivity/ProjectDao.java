@@ -58,7 +58,10 @@ public interface ProjectDao {
 
     @Update(onConflict = OnConflictStrategy.IGNORE)
     void updateTaskRecord(TaskTimeRecord record);
-    
+
+    @Delete
+    void deleteTaskRecord(TaskTimeRecord record);
+
     @Query("SELECT * FROM TaskTimeRecord WHERE daysSinceEpoch=:daysSinceEpoch")
     LiveData<List<TaskTimeRecord>> getTaskRecordsByDay(long daysSinceEpoch);
 
@@ -71,4 +74,15 @@ public interface ProjectDao {
 
     @Query("SELECT * FROM Day where daysSinceEpoch=:daysSinceEpoch")
     LiveData<Day> getDay(long daysSinceEpoch);
+
+
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void insertEvent(Event event);
+
+    @Update
+    void updateEvent(Event event);
+
+    @Query("SELECT * FROM Event WHERE daysSinceEpoch=:daysSinceEpoch")
+    LiveData<List<Event>> getEventsByDay(long daysSinceEpoch);
 }

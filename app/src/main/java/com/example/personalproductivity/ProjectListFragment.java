@@ -7,13 +7,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.tabs.TabLayout;
 
 import java.util.AbstractMap;
 import java.util.List;
@@ -22,32 +27,75 @@ import java.util.Objects;
 
 public class ProjectListFragment extends Fragment {
 
-    private ProjectListFragment viewModel;
     private ProjectViewModel projectViewModel;
     private TaskOrParentType type;
     private TaskOrParent parent;
+    private boolean isEventList;
+    private NavController navController;
+
+    private FloatingActionButton fab;
+    private RecyclerView recyclerView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-        parent = getArguments() == null ? null : (TaskOrParent) getArguments().getSerializable("parent");
-        type = parent == null ? TaskOrParentType.PROJECT :
-                parent instanceof Project ? TaskOrParentType.TASK_GROUP : TaskOrParentType.TASK;
-
         View view = inflater.inflate(R.layout.fragment_project_list, container, false);
 //        viewModel = new ViewModelProvider(Objects.requireNonNull(getActivity())).get(ProjectListViewModel.class);
         projectViewModel = new ViewModelProvider(requireActivity()).get(ProjectViewModel.class);
+        fab = view.findViewById(R.id.fab_create_project);
+        recyclerView = view.findViewById(R.id.recyclerview_projects);
+        if (getArguments() != null) {
+            isEventList = getArguments().getBoolean("isEventList");
+        }
+        if (getArguments() == null || !isEventList) {
+            parent = getArguments() == null ? null : (TaskOrParent) getArguments().getSerializable("parent");
+            type = parent == null ? TaskOrParentType.PROJECT :
+                    parent instanceof Project ? TaskOrParentType.TASK_GROUP : TaskOrParentType.TASK;
+            createProjectList();
+        } else {
+            createEventList();
+        }
+
+        return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        navController = Navigation.findNavController(view);
+        TabLayout tab = view.findViewById(R.id.tab_list_type);
+        if (isEventList) Objects.requireNonNull(tab.getTabAt(1)).select();
+        tab.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                if (Objects.equals(tab.getText(), getString(R.string.project_list))) {
+                    navController.navigate(ProjectListFragmentDirections.changeListType().setIsEventList(false));
+                }
+                else if (Objects.equals(tab.getText(), getString(R.string.event_list))) {
+                    navController.navigate(ProjectListFragmentDirections.changeListType().setIsEventList(true));
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+    }
+
+    private void createProjectList() {
         LiveData<? extends List<? extends TaskOrParent>> taskOrParentList =
                 parent == null ? projectViewModel.getProjects() : parent.getChildren(projectViewModel.getProjectDao());
         ProjectRecyclerViewAdapter adapter =
                 new ProjectRecyclerViewAdapter(new ProjectRecyclerViewAdapter.ProjectDiff(), this::setChildAsState,
                         this::editItem, getViewLifecycleOwner(), projectViewModel);
-        RecyclerView recyclerView = view.findViewById(R.id.recyclerview_projects);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         taskOrParentList.observe(requireActivity(), adapter::convertAndSubmitList);
-        view.findViewById(R.id.fab_create_project).setOnClickListener(this::createItem);
-        return view;
+        fab.setOnClickListener(this::createItem);
     }
 
     public void createItem(View v) {
@@ -115,11 +163,20 @@ public class ProjectListFragment extends Fragment {
 
     private void setChildAsState(TaskOrParent newParent) {
         if (newParent instanceof Task) return;
-        NavHostFragment n = (NavHostFragment) Objects.requireNonNull(getActivity()).getSupportFragmentManager()
-                .findFragmentById(R.id.nav_host_fragment);
-        assert n != null;
         Bundle bundle = new Bundle();
         bundle.putSerializable("parent", newParent);
-        n.getNavController().navigate(R.id.project_list_fragment, bundle);
+        navController.navigate(ProjectListFragmentDirections.changeListType().setParent(newParent).setIsEventList(false));
+    }
+
+
+
+    private void createEventList() {
+        TimeRangeItemAdapter adapter = new TimeRangeItemAdapter((view, item) -> view.setText(((Event) item).getName()), item ->
+            navController.navigate(ProjectListFragmentDirections.actionCreateEvent().setStartingEvent((Event) item)));
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        projectViewModel.getProjectDao().getEventsByDay(WorkTimerFragment.findDaysSinceEpoch()).observe(requireActivity(),
+                adapter::convertAndSubmitList);
+        fab.setOnClickListener(view -> navController.navigate(ProjectListFragmentDirections.actionCreateEvent()));
     }
 }

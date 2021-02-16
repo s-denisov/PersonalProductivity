@@ -43,6 +43,12 @@ public class ProjectDatabaseMigration {
                 public void migrate(@NonNull SupportSQLiteDatabase database) {
                     database.execSQL("ALTER TABLE TaskTimeRecord ADD COLUMN privateStudy INTEGER NOT NULL DEFAULT 0");
                 }
+            }, new Migration(7, 8) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("CREATE TABLE Event (id INTEGER NOT NULL, name TEXT, startTimeStamp INTEGER NOT NULL," +
+                            " daysSinceEpoch INTEGER NOT NULL, length INTEGER NOT NULL, PRIMARY KEY(id))");
+                }
             }
     };
 }

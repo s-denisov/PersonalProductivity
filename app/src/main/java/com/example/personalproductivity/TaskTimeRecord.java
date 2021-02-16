@@ -8,7 +8,7 @@ import lombok.NonNull;
 
 @Entity
 @Data
-public class TaskTimeRecord {
+public class TaskTimeRecord implements TimeRangeItem {
     @EqualsAndHashCode.Include @PrimaryKey @NonNull private long startTimeStamp;
     @NonNull private long daysSinceEpoch;
     private long length = 0;

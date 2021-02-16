@@ -13,6 +13,19 @@
             android:name="com.example.personalproductivity.ProjectListFragment"
             android:label="Project List"
             tools:layout="@layout/fragment_project_list">
+        <action android:id="@+id/change_list_type" app:destination="@+id/project_list_fragment" />
+        <action android:id="@+id/action_create_event" app:destination="@id/event_creator_fragment" />
+        <argument android:name="isEventList" app:argType="boolean" android:defaultValue="false" />
+        <argument android:name="parent" app:argType="com.example.personalproductivity.TaskOrParent" android:defaultValue="@null"
+                  app:nullable="true"/>
+    </fragment>
+    <fragment
+            android:id="@+id/event_creator_fragment"
+            android:name="com.example.personalproductivity.EventCreatorFragment"
+            android:label="Create Event"
+            tools:layout="@layout/fragment_event_creator">
+        <argument android:name="startingEvent" app:argType="com.example.personalproductivity.Event" android:defaultValue="@null"
+                  app:nullable="true" />
     </fragment>
     <fragment
             android:id="@+id/task_statistics_fragment"
