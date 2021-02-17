@@ -43,10 +43,10 @@ public class Schedule {
         events.sort(Comparator.comparingLong(Event::getStartTimeStamp));
         List<ScheduledItem> result = new ArrayList<>();
         for (Event event : events) {
-            long durationBefore = Math.min(duration, event.getStartTimeStamp() - start);
+            long durationBefore = event.getStartTimeStamp() - start; // TODO: use duration if duration is lower (but including breaks)
             Log.d("project", "Before: " + durationBefore / 60_000);
             if (durationBefore > 600_000) {
-                List<ScheduledItem> beforeEvent = schedule(start, durationBefore, durationBefore != duration);
+                List<ScheduledItem> beforeEvent = schedule(start, durationBefore, true);
                 result.addAll(beforeEvent);
                 for (ScheduledItem item : beforeEvent) {
                     duration -= item.length;
@@ -59,6 +59,9 @@ public class Schedule {
     }
 
     private static List<ScheduledItem> schedule(long start, long duration, boolean breaksIncludedInDuration) {
+        LocalDateTime dateTime = LocalDateTime.ofEpochSecond(start / 1000, 0, OffsetDateTime.now().getOffset());
+        Log.d("project", dateTime.toLocalTime() + " ---------------------");
+
         List<ScheduledItem> result = new ArrayList<>();
 
         for (int i = 1; i % 4 != 1 || duration >= 8 * SESSION_LENGTH; i++) {

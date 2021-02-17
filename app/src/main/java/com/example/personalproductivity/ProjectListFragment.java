@@ -2,7 +2,6 @@ package com.example.personalproductivity;
 
 import android.os.Bundle;
 import android.text.InputType;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -107,8 +106,8 @@ public class ProjectListFragment extends Fragment {
         LiveData<? extends List<? extends TaskOrParent>> taskOrParentList =
                 parent == null ? projectViewModel.getProjects() : parent.getChildren(projectViewModel.getProjectDao());
         ProjectRecyclerViewAdapter adapter =
-                new ProjectRecyclerViewAdapter(new ProjectRecyclerViewAdapter.ProjectDiff(), this::setChildAsState,
-                        this::editItem, getViewLifecycleOwner(), projectViewModel);
+                new ProjectRecyclerViewAdapter(new ProjectRecyclerViewAdapter.ProjectDiff(), this::onItemClick,
+                        this::onItemLongClick, getViewLifecycleOwner(), projectViewModel);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         taskOrParentList.observe(requireActivity(), adapter::convertAndSubmitList);
@@ -146,7 +145,7 @@ public class ProjectListFragment extends Fragment {
         builder.show();
     }
 
-    private void editItem(TaskOrParent item) {
+    private void onItemLongClick(TaskOrParent item) {
         AbstractMap.SimpleEntry<EditText, AlertDialog.Builder> values = createDialogBuilder();
         AlertDialog.Builder builder = values.getValue();
         builder.setTitle("Edit " + type);
@@ -178,9 +177,8 @@ public class ProjectListFragment extends Fragment {
         return new AbstractMap.SimpleEntry<>(input, builder);
     }
 
-    private void setChildAsState(TaskOrParent newParent) {
+    private void onItemClick(TaskOrParent newParent) {
         if (type == requestedType) {
-            Log.d("project", "initial");
             helper.setNavigationResult(resultReference, newParent);
             return;
         }
