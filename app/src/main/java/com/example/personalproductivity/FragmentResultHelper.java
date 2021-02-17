@@ -1,6 +1,7 @@
 package com.example.personalproductivity;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.navigation.NavBackStackEntry;
 import androidx.navigation.NavController;
 
@@ -16,7 +17,7 @@ public class FragmentResultHelper {
         if (back != null) {
             return back.getSavedStateHandle().getLiveData(key);
         }
-        return null;
+        return new MutableLiveData<>(null);
     }
 
     public <T> void setNavigationResult(String key, T result) {

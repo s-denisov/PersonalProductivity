@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputType;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -162,10 +161,10 @@ public class WorkTimerFragment extends Fragment {
                 long starting = day.subtractPrivateStudy(0);
                 viewModel.setTimeSpentTodayValue(starting);
 
-                projectViewModel.getProjectDao().getEventsByDay(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), events -> {
-                    schedule = Schedule.schedule(timeToMillisSinceEpoch(LocalDateTime.now().withHour(9).withMinute(0).withSecond(0)),
-                            adjustedTargetWorkTime - starting, events);
-                });
+                projectViewModel.getProjectDao().getEventsByDay(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), events ->
+                        schedule = Schedule.schedule(timeToMillisSinceEpoch(LocalDateTime.now()
+                                        .withHour(9).withMinute(0).withSecond(0).withNano(0)),
+                        adjustedTargetWorkTime - starting, events));
                 for (TaskTimeRecord record : records) viewModel.increaseTimeSpentTodayValue(record.getLength());
             });
             final long targetChange = 1800_000;
@@ -313,10 +312,8 @@ public class WorkTimerFragment extends Fragment {
                                     PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), 0, intent, 0);
                                     AlarmManager alarmManager = (AlarmManager) requireContext().getSystemService(Context.ALARM_SERVICE);
                                     alarmManager.cancel(pendingIntent);
-                                    alarmManager.set(AlarmManager.RTC_WAKEUP, nextItem.getStart() - 60_000, pendingIntent);
-                                    Log.d("project", "Scheduled at: " + (nextItem.getStart() - 60_000));
+                                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextItem.getStart() - 60_000, pendingIntent);
                                 }
-                                Log.d("project", "Current time: " + System.currentTimeMillis());
 
                                 sessionLength = nextItem.getLength();
                                 long timeLeft = nextItem.getStart() - currentTime;

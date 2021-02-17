@@ -30,7 +30,7 @@ public class Schedule {
     }
 
     public static final long SESSION_LENGTH = 1800_000;
-//    public static final long SESSION_LENGTH = 70_000; // For testing
+//    public static final long SESSION_LENGTH = 10_000; // For testing
     public static final long SHORT_BREAK_LENGTH = 300_000;
 //    public static final long SHORT_BREAK_LENGTH = 70_000; // For testing
     public static final long LONG_BREAK_LENGTH = 1800_000;
@@ -110,10 +110,6 @@ public class Schedule {
             }
 //            }
         }
-        for (ScheduledItem item : result) {
-            Log.d("project", item.toString());
-        }
-        Log.d("project", "-----");
         return result;
     }
 

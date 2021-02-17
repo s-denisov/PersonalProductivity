@@ -14,6 +14,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.github.mikephil.charting.charts.BarChart;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -45,26 +48,38 @@ public class TaskStatisticsFragment extends Fragment {
     private final float SCHOOL_EFFICIENCY_MODIFIER = 0.8f;
     private View view;
     private BarChart chart;
+    private ProjectViewModel viewModel;
     private ProjectDao dao;
     private TextView weekTotalText;
     private TextView dateText;
+    private NavController navController;
     private long daysBeforeCurrent = 0;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_task_statistics, container, false);
-        dao = new ViewModelProvider(this).get(ProjectViewModel.class).getProjectDao();
+        viewModel =  new ViewModelProvider(this).get(ProjectViewModel.class);
+        dao = viewModel.getProjectDao();
         weekTotalText = view.findViewById(R.id.text_week_total);
         dateText = view.findViewById(R.id.text_date);
 
+
+        return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        navController = Navigation.findNavController(view);
+
         TabLayout chartType = view.findViewById(R.id.tab_chart_type);
+        AtomicBoolean selectedByUser = new AtomicBoolean(true);
         chartType.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                if (Objects.equals(tab.getText(), getString(R.string.record_tab))) createRecordChart();
-                else if (Objects.equals(tab.getText(), getString(R.string.target_tab))) createTargetChart();
-                else createWorkList();
+                if (selectedByUser.get()) {
+                    navController.navigate(TaskStatisticsFragmentDirections.openTab().setTab(tab.getPosition()));
+                }
             }
 
             @Override
@@ -77,9 +92,21 @@ public class TaskStatisticsFragment extends Fragment {
 
             }
         });
-        createRecordChart();
 
-        return view;
+        if (getArguments() != null) {
+            TabLayout.Tab selectedTab = chartType.getTabAt(TaskStatisticsFragmentArgs.fromBundle(getArguments()).getTab());
+            if (selectedTab != null) {
+                selectedByUser.set(false);
+                selectedTab.select();
+                selectedByUser.set(true);
+
+                if (Objects.equals(selectedTab.getText(), getString(R.string.record_tab))) createRecordChart();
+                else if (Objects.equals(selectedTab.getText(), getString(R.string.target_tab))) createTargetChart();
+                else createWorkList();
+                return;
+            }
+        }
+        createRecordChart();
     }
 
     private void createRecordChart() {
@@ -234,7 +261,15 @@ public class TaskStatisticsFragment extends Fragment {
         layout.addView(recyclerView);
         TimeRangeItemAdapter adapter = new TimeRangeItemAdapter((recordTask, record) ->
                 dao.getTask(((TaskTimeRecord) record).getTaskId()).observe(getViewLifecycleOwner(), task -> recordTask.setText(task.getName())),
-                (task) -> {});
+                (record) -> {
+                    navController.navigate(ProjectListFragmentDirections.requestTaskOrParent().setIsRequest(true));
+                    FragmentResultHelper helper = new FragmentResultHelper(navController);
+                    helper.getNavigationResultLiveData(ProjectListFragment.resultReference).observe(requireActivity(), task -> {
+                        TaskTimeRecord taskRecord = (TaskTimeRecord) record;
+                        taskRecord.setTaskId(((Task) task).id);
+                        viewModel.doAction(dao -> dao.updateTaskRecord(taskRecord));
+                    });
+                });
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         manageWeekChanges(false, () -> updateWorkList(adapter));

@@ -2,6 +2,7 @@ package com.example.personalproductivity;
 
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,14 +25,18 @@ import java.util.AbstractMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ProjectListFragment extends Fragment {
 
     private ProjectViewModel projectViewModel;
     private TaskOrParentType type;
     private TaskOrParent parent;
+    private TaskOrParentType requestedType;
     private boolean isEventList;
     private NavController navController;
+    private FragmentResultHelper helper;
+    public static final String resultReference = "com.example.personalproductivity.ProjectListFragment.result";
 
     private FloatingActionButton fab;
     private RecyclerView recyclerView;
@@ -44,10 +49,12 @@ public class ProjectListFragment extends Fragment {
         fab = view.findViewById(R.id.fab_create_project);
         recyclerView = view.findViewById(R.id.recyclerview_projects);
         if (getArguments() != null) {
-            isEventList = getArguments().getBoolean("isEventList");
+            ProjectListFragmentArgs args = ProjectListFragmentArgs.fromBundle(getArguments());
+            isEventList = args.getIsEventList();
+            if (args.getIsRequest()) requestedType = args.getRequestedType();
         }
         if (getArguments() == null || !isEventList) {
-            parent = getArguments() == null ? null : (TaskOrParent) getArguments().getSerializable("parent");
+            parent = getArguments() == null ? null : ProjectListFragmentArgs.fromBundle(getArguments()).getParent();
             type = parent == null ? TaskOrParentType.PROJECT :
                     parent instanceof Project ? TaskOrParentType.TASK_GROUP : TaskOrParentType.TASK;
             createProjectList();
@@ -55,12 +62,22 @@ public class ProjectListFragment extends Fragment {
             createEventList();
         }
 
+
         return view;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         navController = Navigation.findNavController(view);
+        helper = new FragmentResultHelper(navController);
+        AtomicBoolean notPopped = new AtomicBoolean(true);
+        helper.getNavigationResultLiveData(resultReference).observe(requireActivity(), result -> {
+            helper.setNavigationResult(resultReference, result);
+            if (result != null && requestedType != null && notPopped.get()) {
+                navController.popBackStack();
+                notPopped.set(false);
+            }
+        });
         TabLayout tab = view.findViewById(R.id.tab_list_type);
         if (isEventList) Objects.requireNonNull(tab.getTabAt(1)).select();
         tab.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -162,10 +179,15 @@ public class ProjectListFragment extends Fragment {
     }
 
     private void setChildAsState(TaskOrParent newParent) {
+        if (type == requestedType) {
+            Log.d("project", "initial");
+            helper.setNavigationResult(resultReference, newParent);
+            return;
+        }
         if (newParent instanceof Task) return;
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("parent", newParent);
-        navController.navigate(ProjectListFragmentDirections.changeListType().setParent(newParent).setIsEventList(false));
+        navController.navigate(ProjectListFragmentDirections.changeListType()
+                .setParent(newParent).setIsRequest(requestedType != null)
+                .setRequestedType(requestedType == null ? TaskOrParentType.TASK : requestedType).setIsEventList(false));
     }
 
 

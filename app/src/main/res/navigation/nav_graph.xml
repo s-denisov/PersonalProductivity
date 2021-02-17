@@ -18,7 +18,10 @@
         <argument android:name="isEventList" app:argType="boolean" android:defaultValue="false" />
         <argument android:name="parent" app:argType="com.example.personalproductivity.TaskOrParent" android:defaultValue="@null"
                   app:nullable="true"/>
+        <argument android:name="requestedType" app:argType="com.example.personalproductivity.TaskOrParentType" android:defaultValue="TASK"/>
+        <argument android:name="isRequest" app:argType="boolean" android:defaultValue="false"/>
     </fragment>
+    <action android:id="@+id/request_task_or_parent" app:destination="@id/project_list_fragment" />
     <fragment
             android:id="@+id/event_creator_fragment"
             android:name="com.example.personalproductivity.EventCreatorFragment"
@@ -32,5 +35,7 @@
             android:name="com.example.personalproductivity.TaskStatisticsFragment"
             android:label="Task Statistics"
             tools:layout="@layout/fragment_task_statistics">
+        <argument android:name="tab" app:argType="integer" android:defaultValue="0" />
     </fragment>
+    <action android:id="@+id/open_tab" app:destination="@id/task_statistics_fragment" />
 </navigation>
