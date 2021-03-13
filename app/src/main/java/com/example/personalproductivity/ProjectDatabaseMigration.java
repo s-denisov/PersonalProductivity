@@ -49,6 +49,61 @@ public class ProjectDatabaseMigration {
                     database.execSQL("CREATE TABLE Event (id INTEGER NOT NULL, name TEXT, startTimeStamp INTEGER NOT NULL," +
                             " daysSinceEpoch INTEGER NOT NULL, length INTEGER NOT NULL, PRIMARY KEY(id))");
                 }
+            }, new Migration(8, 9) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("CREATE TABLE ProjectTemp (id INTEGER NOT NULL PRIMARY KEY AUTOiNCREMENT," +
+                            " name TEXT, completionStatus TEXT)");
+                    database.execSQL("INSERT INTO ProjectTemp (name, completionStatus)" +
+                            "SELECT name, completionStatus FROM Project");
+                    database.execSQL("DROP TABLE Project");
+                    database.execSQL("ALTER TABLE ProjectTemp RENAME TO Project");
+                }
+            }, new Migration(9, 10) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("CREATE TABLE TaskGroupTemp (id INTEGER NOT NULL, parentProjectId INTEGER NOT NULL, " +
+                            " name TEXT, completionStatus TEXT, PRIMARY KEY(id))");
+                    database.execSQL("INSERT INTO TaskGroupTemp (id, parentProjectId, name, completionStatus)" +
+                            "SELECT id, id, name, completionStatus FROM TaskGroup");
+                    database.execSQL("UPDATE TaskGroupTemp SET parentProjectId=(SELECT id FROM PROJECT WHERE name=" +
+                            "(SELECT parentProjectName FROM TaskGroup WHERE id=TaskGroupTemp.id))");
+                    database.execSQL("DROP TABLE TaskGroup");
+                    database.execSQL("ALTER TABLE TaskGroupTemp RENAME TO TaskGroup");
+                }
+            }, new Migration(10, 11) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("CREATE TABLE TaskTemp (id INTEGER NOT NULL, parentTaskGroupId INTEGER NOT NULL, " +
+                            "name TEXT, lastUsed INTEGER NOT NULL, completionStatus TEXT, PRIMARY KEY(id))");
+                    database.execSQL("INSERT INTO TaskTemp (id, parentTaskGroupId, name, lastUsed, completionStatus)" +
+                            "SELECT id, parentTaskGroupId, name, lastUsed, completionStatus FROM Task");
+                    database.execSQL("DROP TABLE Task");
+                    database.execSQL("ALTER TABLE TaskTemp RENAME TO Task");
+                }
+            },  new Migration(11, 12) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("ALTER TABLE Task ADD COLUMN priority INTEGER NOT NULL DEFAULT 60");
+                }
+            },  new Migration(12, 13) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("ALTER TABLE Task ADD COLUMN deadlineDate INTEGER NOT NULL DEFAULT 18700");
+                    database.execSQL("ALTER TABLE Task ADD COLUMN expectedTime INTEGER NOT NULL DEFAULT 3600");
+                }
+            },  new Migration(13, 14) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("CREATE VIEW `TaskView` AS SELECT Task.id AS taskId, Task.name AS name, " +
+                            "Task.completionStatus AS completionStatus, Task.parentTaskGroupId AS parentId, " +
+                            "Sum(TaskTimeRecord.length) AS totalLength, SUM(CASE WHEN TaskTimeRecord.daysSinceEpoch=(SELECT MAX(daysSinceEpoch) " +
+                            "FROM TaskTimeRecord) THEN TaskTimeRecord.length ELSE 0 END) AS lengthToday FROM Task INNER JOIN TaskTimeRecord ON TaskTimeRecord.taskId=Task.id");
+                }
+            },  new Migration(14, 15) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                }
             }
     };
 }

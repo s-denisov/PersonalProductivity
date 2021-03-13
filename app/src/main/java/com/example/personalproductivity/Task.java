@@ -12,33 +12,42 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-@TypeConverters({CompletionStatus.class})
-public class Task implements TaskOrParent {
+@TypeConverters({CompletionStatus.class, Priority.class})
+public class Task implements TaskOrParent { // TODO: for some reason, crashes on start if TaskOrParent not implemented. Seems to be due to navigation.
 
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey(autoGenerate = true) @Getter
     public int id;
     public int parentTaskGroupId;
 
     public String name;
-    public boolean succeeded = false;
-    public boolean failed = false;
-    public long timeSpent = 0;
     public long lastUsed = 0;
     @Getter @Setter public CompletionStatus completionStatus = CompletionStatus.IN_PROGRESS;
+    @Getter @Setter @NonNull public Priority priority = Priority.EXPECTED;
+    @Getter @Setter @NonNull public long deadlineDate;
+    @Getter @Setter @NonNull public long expectedTime;
 
-    @Override
     public String getName() {
         return name;
     }
 
-    @Override
     public void setName(String name) {
         this.name = name;
     }
 
-    @Override
     public LiveData<? extends List<? extends TaskOrParent>> getChildren(ProjectDao source) {
         return null;
+    }
+
+    public void setParentId(int parentId) {
+        parentTaskGroupId = parentId;
+    }
+
+    public void updateInDb(ProjectViewModel viewModel) {
+        viewModel.doAction(dao -> dao.updateTask(this));
+    }
+
+    public void deleteInDb(ProjectViewModel viewModel) {
+        viewModel.doAction(dao -> dao.deleteTask(this));
     }
 
     @Override

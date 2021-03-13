@@ -14,22 +14,55 @@ public interface ProjectDao {
     @Query("SELECT * FROM Project WHERE name=:name")
     Project getProject(String name);
 
-    @Query("SELECT * FROM TaskGroup WHERE parentProjectName=:projectName")
-    LiveData<List<TaskGroup>> getTaskGroups(String projectName);
+    @Query("SELECT * FROM TaskGroup WHERE parentProjectId=:projectId ORDER BY id DESC")
+    LiveData<List<TaskGroup>> getTaskGroups(int projectId);
 
-    @Query("SELECT * FROM Task WHERE parentTaskGroupId=:taskGroupId")
+    @Query("SELECT * FROM Task WHERE parentTaskGroupId=:taskGroupId ORDER BY lastUsed DESC")
     LiveData<List<Task>> getTasks(int taskGroupId);
 
     @Query("SELECT * FROM Task WHERE completionStatus='IN_PROGRESS' ORDER BY lastUsed DESC")
     LiveData<List<Task>> getTasksLastUsed();
 
-    @Query("SELECT * FROM Project WHERE name=" +
-            "(SELECT parentProjectName FROM TaskGroup WHERE id=(SELECT parentTaskGroupId FROM Task WHERE id=:taskId))")
+    @Query("SELECT * FROM Task WHERE completionStatus='TODO_LATER' OR completionStatus='IN_PROGRESS' ORDER BY priority DESC, lastUsed DESC")
+    LiveData<List<Task>> getTasksByPriority();
+
+
+    @Query("SELECT Task.*, " +
+            "Task.priority AS priority, SUM(TaskTimeRecord.length) AS totalLength, :daysSinceEpoch AS daysSinceEpoch, " +
+            "SUM(CASE WHEN TaskTimeRecord.daysSinceEpoch=:daysSinceEpoch THEN TaskTimeRecord.length ELSE 0 END) AS lengthToday" +
+            " FROM Task LEFT JOIN TaskTimeRecord ON TaskTimeRecord.taskId=Task.id WHERE Task.parentTaskGroupId=:taskGroupId " +
+            "GROUP BY Task.id ORDER BY lastUsed DESC")
+    LiveData<List<TaskView>> getTaskViewsByTaskGroup(int taskGroupId, long daysSinceEpoch);
+
+    @Query("SELECT Task.*, " +
+            "Task.priority AS priority, SUM(TaskTimeRecord.length) AS totalLength, :daysSinceEpoch AS daysSinceEpoch, " +
+            "SUM(CASE WHEN TaskTimeRecord.daysSinceEpoch=:daysSinceEpoch THEN TaskTimeRecord.length ELSE 0 END) AS lengthToday" +
+            " FROM Task LEFT JOIN TaskTimeRecord ON TaskTimeRecord.taskId=Task.id WHERE Task.completionStatus='IN_PROGRESS' " +
+            "OR Task.completionStatus='TODO_LATER' GROUP BY Task.id ORDER BY Task.priority DESC")
+    LiveData<List<TaskView>> getTaskViews(long daysSinceEpoch);
+
+    @Query("SELECT * FROM Task WHERE completionStatus='IN_PROGRESS' AND deadlineDate > :currentDate AND " +
+            "(expectedTime > (SELECT SUM(CASE WHEN TaskTimeRecord.daysSinceEpoch=:currentDate THEN " +
+            "TaskTimeRecord.length * (deadlineDate - :currentDate) ELSE TaskTimeRecord.length END)" +
+            " FROM TaskTimeRecord WHERE TaskTimeRecord.taskId=Task.id)) " +
+            "ORDER BY lastUsed DESC")
+    LiveData<List<Task>> getTasksWithHighestPriority(long currentDate);
+
+    @Query("SELECT * FROM Task WHERE (completionStatus='TODO_LATER' OR completionStatus='IN_PROGRESS')" +
+            "ORDER BY priority DESC, (expectedTime - (SELECT SUM(TaskTimeRecord.length) FROM TaskTimeRecord" +
+            " WHERE TaskTimeRecord.taskId=Task.id)) / (deadlineDate - :currentDate) ASC")
+//            "ORDER BY (priority * priority * (expectedTime - (SELECT SUM(length) FROM TaskTimeRecord WHERE taskId=Task.id)) / (1 + deadlineDate - :currentDate)) DESC")
+    LiveData<List<Task>> getTasksByAdjustedPriority(long currentDate);
+
+    @Query("SELECT * FROM Project WHERE id=" +
+            "(SELECT parentProjectId FROM TaskGroup WHERE id=(SELECT parentTaskGroupId FROM Task WHERE id=:taskId))")
     LiveData<Project> getProjectFromTask(int taskId);
 
     @Query("SELECT * FROM Task WHERE id=:id")
     LiveData<Task> getTask(int id);
 
+    @Query("SELECT SUM(length) FROM TaskTimeRecord WHERE taskId=:taskId")
+    LiveData<Long> findTimeSpent(int taskId);
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertProject(Project project);
@@ -51,6 +84,16 @@ public interface ProjectDao {
     void updateTask(Task task);
 
 
+    @Delete
+    void deleteProject(Project project);
+
+    @Delete
+    void deleteTaskGroup(TaskGroup taskGroup);
+
+    @Delete
+    void deleteTask(Task task);
+
+
 
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -59,11 +102,14 @@ public interface ProjectDao {
     @Update(onConflict = OnConflictStrategy.IGNORE)
     void updateTaskRecord(TaskTimeRecord record);
 
-    @Delete
-    void deleteTaskRecord(TaskTimeRecord record);
+    @Query("SELECT * FROM TaskTimeRecord WHERE startTimeStamp=:millisSinceEpoch")
+    LiveData<TaskTimeRecord> getTaskRecordByTime(long millisSinceEpoch);
 
     @Query("SELECT * FROM TaskTimeRecord WHERE daysSinceEpoch=:daysSinceEpoch")
     LiveData<List<TaskTimeRecord>> getTaskRecordsByDay(long daysSinceEpoch);
+
+    @Query("SELECT * FROM TaskTimeRecord WHERE taskId=:taskId")
+    LiveData<List<TaskTimeRecord>> getTaskRecordsByTaskId(int taskId);
 
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

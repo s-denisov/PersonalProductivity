@@ -15,9 +15,9 @@ import java.util.Objects;
 @TypeConverters({CompletionStatus.class})
 public class TaskGroup implements TaskOrParent{
 
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey(autoGenerate = true) @Getter
     public int id;
-    public String parentProjectName;
+    public int parentProjectId;
 
     @Getter @Setter public String name;
     @Getter @Setter public CompletionStatus completionStatus = CompletionStatus.IN_PROGRESS;
@@ -34,8 +34,23 @@ public class TaskGroup implements TaskOrParent{
     }
 
     @Override
-    public LiveData<List<Task>> getChildren(ProjectDao source) {
-        return source.getTasks(id);
+    public LiveData<List<TaskView>> getChildren(ProjectDao source) {
+        return source.getTaskViewsByTaskGroup(id, WorkTimerFragment.findDaysSinceEpoch());
+    }
+
+    @Override
+    public void setParentId(int parentId) {
+        parentProjectId = parentId;
+    }
+
+    @Override
+    public void updateInDb(ProjectViewModel viewModel) {
+        viewModel.doAction(dao -> dao.updateTaskGroup(this));
+    }
+
+    @Override
+    public void deleteInDb(ProjectViewModel viewModel) {
+        viewModel.doAction(dao -> dao.deleteTaskGroup(this));
     }
 
     @Override

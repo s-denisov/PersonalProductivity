@@ -2,16 +2,15 @@ package com.example.personalproductivity;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 import lombok.Getter;
 import lombok.Setter;
 
 
-public class WorkTimerViewModel extends ViewModel {
+public class WorkTimerViewModel {// extends ViewModel {
 
     @Getter @Setter private WorkOrBreakTimer timer;
     private final MutableLiveData<Boolean> timerOn = new MutableLiveData<>(false);
-    @Getter @Setter private boolean isWorkTimer;
+//    @Getter @Setter private boolean isWorkTimer;
     private final MutableLiveData<String> timerType = new MutableLiveData<>();
     @Getter @Setter private Task taskSelected;
     @Getter @Setter private TaskTimeRecord record;
@@ -31,7 +30,12 @@ public class WorkTimerViewModel extends ViewModel {
         return timerOn;
     }
 
+    public void setTimerOnValue(boolean value) {
+        timerOn.setValue(value);
+    }
+
     public void flipTimerOnValue() {
+        //noinspection ConstantConditions
         timerOn.setValue(!timerOn.getValue());
     }
 
@@ -45,6 +49,7 @@ public class WorkTimerViewModel extends ViewModel {
     }
 
     public void increaseTimeSpentTodayValue(long increase) {
+        //noinspection ConstantConditions
         timeSpentToday.setValue(timeSpentToday.getValue() + increase);
     }
 }

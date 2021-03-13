@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LiveData;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,6 +25,8 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
         private final View view;
         private final TextView nameText;
         private final TextView timeSpentText;
+        private final TextView priorityText;
+        private final TextView todayText;
         private long timeSpent = 0;
 
         public ViewHolder(View view) {
@@ -31,18 +34,28 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
             this.view = view;
             nameText = view.findViewById(R.id.text_name);
             timeSpentText = view.findViewById(R.id.text_time_spent);
+            priorityText = view.findViewById(R.id.text_priority);
+            todayText = view.findViewById(R.id.text_time_today);
         }
 
         public void bind(TaskOrParent item) {
             nameText.setText(item.getName());
-            view.setOnClickListener(v -> setListState.accept(item));
+            if (item instanceof Task) priorityText.setText(((Task) item).getPriority().toString());
+            if (item instanceof TaskView) {
+                TaskView taskView = (TaskView) item;
+                priorityText.setText(taskView.getTask().getPriority().toString());
+                todayText.setText(WorkOrBreakTimer.toHoursMinutes(taskView.findTimeToDoToday()));
+            }
+            view.setOnClickListener(v -> onClick.accept(item));
             view.setOnLongClickListener(v -> {
-                editName.accept(item);
+                onLongClick.accept(item);
                 return true;
             });
+
             List<TaskOrParent> l = new ArrayList<>();
             l.add(item);
-            findTimeSpent(l);
+            timeSpent = 0;
+            findTimeSpent(l, true);
             RadioButton[] radios = { view.findViewById(R.id.radio_todo_later), view.findViewById(R.id.radio_in_progress),
                                     view.findViewById(R.id.radio_tick), view.findViewById(R.id.radio_cross) };
             CompletionStatus[] statuses = { CompletionStatus.TODO_LATER, CompletionStatus.IN_PROGRESS,
@@ -53,20 +66,29 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
                 int finalI = i;
                 radios[i].setOnClickListener(v -> {
                     item.setCompletionStatus(statuses[finalI]);
-                    if (item instanceof Project) viewModel.doAction(dao -> dao.updateProject((Project) item));
-                    if (item instanceof TaskGroup) viewModel.doAction(dao -> dao.updateTaskGroup((TaskGroup) item));
-                    if (item instanceof Task) viewModel.doAction(dao -> dao.updateTask((Task) item));
+                    item.updateInDb(viewModel);
                 });
             }
         }
 
-        private void findTimeSpent(List<? extends TaskOrParent> taskOrParentList) {
+        private void findTimeSpent(List<? extends TaskOrParent> taskOrParentList, boolean isItem) {
             for (TaskOrParent t : taskOrParentList) {
                 if (t instanceof Task) {
-                    timeSpent += ((Task) t).timeSpent;
-                    timeSpentText.setText(formatTime(timeSpent));
+                    LiveData<Long> spentLiveData = viewModel.getProjectDao().findTimeSpent(t.getId());
+                    spentLiveData.observe(owner, spent -> {
+                        if (spent != null) {
+                            timeSpent += spent;
+                        }
+                        timeSpentText.setText(WorkOrBreakTimer.toHoursMinutes(timeSpent));
+                        spentLiveData.removeObservers(owner);
+                    });
+                } else if (t instanceof TaskView) {
+                    timeSpent += ((TaskView) t).getTotalLength();
+                    String resultText = WorkOrBreakTimer.toHoursMinutes(timeSpent);
+                    if (isItem) resultText += "/" + WorkOrBreakTimer.toHoursMinutes(((TaskView) t).getTask().expectedTime);
+                    timeSpentText.setText(resultText);
                 } else {
-                    t.getChildren(viewModel.getProjectDao()).observe(owner, this::findTimeSpent);
+                    t.getChildren(viewModel.getProjectDao()).observe(owner, newList -> findTimeSpent(newList, false));
                 }
             }
         }
@@ -90,17 +112,17 @@ public class ProjectRecyclerViewAdapter extends ListAdapter<TaskOrParent, Projec
         }
     }
 
-    private final Consumer<TaskOrParent> setListState;
-    private final Consumer<TaskOrParent> editName;
+    private final Consumer<TaskOrParent> onClick;
+    private final Consumer<TaskOrParent> onLongClick;
     private final LifecycleOwner owner;
     private final ProjectViewModel viewModel;
 
     public ProjectRecyclerViewAdapter(@NonNull DiffUtil.ItemCallback<TaskOrParent> diffCallback,
-                                      Consumer<TaskOrParent> setListState, Consumer<TaskOrParent> editName, LifecycleOwner owner,
+                                      Consumer<TaskOrParent> onClick, Consumer<TaskOrParent> onLongClick, LifecycleOwner owner,
                                       ProjectViewModel viewModel) {
         super(diffCallback);
-        this.setListState = setListState;
-        this.editName = editName;
+        this.onClick = onClick;
+        this.onLongClick = onLongClick;
         this.owner = owner;
         this.viewModel = viewModel;
     }

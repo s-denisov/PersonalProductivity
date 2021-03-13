@@ -55,6 +55,7 @@ dependencies {
     implementation "androidx.navigation:navigation-ui:$nav_version"
 
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    implementation "androidx.preference:preference:1.1.1"
 
     apply plugin: "androidx.navigation.safeargs"
 }

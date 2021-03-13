@@ -11,5 +11,9 @@ public interface TaskOrParent extends Serializable {
     CompletionStatus getCompletionStatus();
     void setCompletionStatus(CompletionStatus completionStatus);
     LiveData<? extends List<? extends TaskOrParent>> getChildren(ProjectDao source);
+    int getId();
+    void setParentId(int id);
+    void updateInDb(ProjectViewModel viewModel);
+    void deleteInDb(ProjectViewModel viewModel);
     boolean equals(Object t2);
 }

@@ -1,5 +1,6 @@
 package com.example.personalproductivity;
 
+import android.content.SharedPreferences;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import lombok.Data;
@@ -29,17 +30,26 @@ public class Schedule {
         }
     }
 
-    public static final long SESSION_LENGTH = 1800_000;
-//    public static final long SESSION_LENGTH = 10_000; // For testing
-    public static final long SHORT_BREAK_LENGTH = 300_000;
-//    public static final long SHORT_BREAK_LENGTH = 70_000; // For testing
-    public static final long LONG_BREAK_LENGTH = 1800_000;
-//    public static final long LONG_BREAK_LENGTH = 70_000; // For testing
-    public static final long MAX_SESSION_LENGTH = SESSION_LENGTH * 4 / 3;
-    public static final long MAX_BLOCK_LENGTH = 5 * SESSION_LENGTH;
+    public long sessionLength;
+    public long shortBreakLength;
+    public long longBreakLength;
+    public long maxSessionLength;
+    public long maxBlockLength;
 
 
-    public static List<ScheduledItem> schedule(long start, long duration /* without breaks */, List<Event> events) {
+    public Schedule(SharedPreferences settings) {
+        sessionLength = keyToMillis(settings, SettingsFragment.SESSION_LENGTH_KEY);
+        shortBreakLength = keyToMillis(settings, SettingsFragment.SHORT_BREAK_LENGTH_KEY);
+        longBreakLength = keyToMillis(settings, SettingsFragment.LONG_BREAK_LENGTH_KEY);
+        maxSessionLength = keyToMillis(settings, SettingsFragment.MAX_SESSION_LENGTH_KEY);
+        maxBlockLength = keyToMillis(settings, SettingsFragment.MAX_BLOCK_LENGTH_KEY);
+    }
+
+    private static int keyToMillis(SharedPreferences settings, String key) {
+        return Integer.parseInt(settings.getString(key, "0")) * 60_000;
+    }
+
+    public List<ScheduledItem> schedule(long start, long duration /* without breaks */, List<Event> events) {
         events.sort(Comparator.comparingLong(Event::getStartTimeStamp));
         List<ScheduledItem> result = new ArrayList<>();
         for (Event event : events) {
@@ -58,57 +68,57 @@ public class Schedule {
         return result;
     }
 
-    private static List<ScheduledItem> schedule(long start, long duration, boolean breaksIncludedInDuration) {
+    private List<ScheduledItem> schedule(long start, long duration, boolean breaksIncludedInDuration) {
         LocalDateTime dateTime = LocalDateTime.ofEpochSecond(start / 1000, 0, OffsetDateTime.now().getOffset());
         Log.d("project", dateTime.toLocalTime() + " ---------------------");
 
         List<ScheduledItem> result = new ArrayList<>();
 
-        for (int i = 1; i % 4 != 1 || duration >= 8 * SESSION_LENGTH; i++) {
-            result.add(new ScheduledItem(start, SESSION_LENGTH, true));
-            long breakTime = i % 4 == 0 ? LONG_BREAK_LENGTH : SHORT_BREAK_LENGTH;
-            start += SESSION_LENGTH + breakTime;
-            duration -= SESSION_LENGTH;
+        for (int i = 1; i % 4 != 1 || duration >= 8 * sessionLength; i++) {
+            result.add(new ScheduledItem(start, sessionLength, true));
+            long breakTime = i % 4 == 0 ? longBreakLength : shortBreakLength;
+            start += sessionLength + breakTime;
+            duration -= sessionLength;
             if (breaksIncludedInDuration) duration -= breakTime;
         }
 
         for (int i = 0; i < 2; i++) {
             long duration2;
             //if ((!breaksIncludedInDuration && duration > 2.5 * 3600_000) || duration > 3 * 3600_000) {
-            if (duration > MAX_BLOCK_LENGTH) {
+            if (duration > maxBlockLength) {
                 Log.d("project", String.valueOf(duration / 60_000));
                 duration2 = duration / 2;
-                if (breaksIncludedInDuration) duration2 -= LONG_BREAK_LENGTH / 2;
+                if (breaksIncludedInDuration) duration2 -= longBreakLength / 2;
             } else {
                 duration2 = duration;
                 i++;
             }
             Log.d("project", String.valueOf(duration2 / 60_000));
-            while (duration2 > 2 * MAX_SESSION_LENGTH) {
+            while (duration2 > 2 * maxSessionLength) {
                 Log.d("project", String.valueOf(duration2 / 60_000));
-                result.add(new ScheduledItem(start, SESSION_LENGTH, true));
-                start += SESSION_LENGTH + SHORT_BREAK_LENGTH;
-                duration2 -= SESSION_LENGTH;
-                if (breaksIncludedInDuration) duration2 -= SHORT_BREAK_LENGTH;
+                result.add(new ScheduledItem(start, sessionLength, true));
+                start += sessionLength + shortBreakLength;
+                duration2 -= sessionLength;
+                if (breaksIncludedInDuration) duration2 -= shortBreakLength;
             }
 //            if (duration2 <= 2 * MAX_SESSION_LENGTH && (!breaksIncludedInDuration || duration2 > SHORT_BREAK_LENGTH)) {
 
             Log.d("project", String.valueOf(duration2 / 60_000));
 
-            if (duration2 <= MAX_SESSION_LENGTH) {
-                long breakLength = i == 0 ? LONG_BREAK_LENGTH : SHORT_BREAK_LENGTH;
+            if (duration2 <= maxSessionLength) {
+                long breakLength = i == 0 ? longBreakLength : shortBreakLength;
                 duration2 -= breakLength;
                 if (duration2 > 0) {
                     result.add(new ScheduledItem(start, duration2, true));
                     start += duration2 + breakLength;
                 }
             } else {
-                if (breaksIncludedInDuration) duration2 -= SHORT_BREAK_LENGTH;
+                if (breaksIncludedInDuration) duration2 -= shortBreakLength;
                 if (duration2 > 600_000) {
                     result.add(new ScheduledItem(start, duration2 / 2, true));
-                    start += duration2 / 2 + SHORT_BREAK_LENGTH;
+                    start += duration2 / 2 + shortBreakLength;
                     result.add(new ScheduledItem(start, duration2 / 2, true));
-                    start += duration2 / 2 + LONG_BREAK_LENGTH;
+                    start += duration2 / 2 + longBreakLength;
                 }
             }
 //            }

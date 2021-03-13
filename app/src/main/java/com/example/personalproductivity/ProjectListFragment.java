@@ -1,10 +1,11 @@
 package com.example.personalproductivity;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.util.Log;
+import android.view.*;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
@@ -20,11 +21,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class ProjectListFragment extends Fragment {
 
@@ -33,15 +33,28 @@ public class ProjectListFragment extends Fragment {
     private TaskOrParent parent;
     private TaskOrParentType requestedType;
     private boolean isEventList;
+    private boolean requesting = false;
+    private boolean collapsed = false;
     private NavController navController;
     private FragmentResultHelper helper;
     public static final String resultReference = "com.example.personalproductivity.ProjectListFragment.result";
+    private Consumer<TaskOrParent> onResult;
+    private ProjectRecyclerViewAdapter adapter;
+    private List<TaskOrParent> itemsToShow = new ArrayList<>();
+    private LiveData<? extends List<? extends TaskOrParent>> taskOrParentList;
+
+    private final CompletionStatus[] completionStatuses = { CompletionStatus.TODO_LATER, CompletionStatus.IN_PROGRESS, CompletionStatus.COMPLETE, CompletionStatus.FAILED };
+    private final boolean[] showWithCompletionStatus = { true, true, true, true };
+    private final int[] completionStatusIds = { R.id.todo_later, R.id.in_progress, R.id.complete, R.id.failed };
+    private final String[] statusSharedPrefRef = { "ProjectListFragment status TODO_LATER", "ProjectListFragment status IN_PROGRESS", "ProjectListFragment status COMPLETE", "ProjectListFragment status FAILED" };
+    private SharedPreferences sharedPref;
 
     private FloatingActionButton fab;
     private RecyclerView recyclerView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.d("project", toString());
         View view = inflater.inflate(R.layout.fragment_project_list, container, false);
 //        viewModel = new ViewModelProvider(Objects.requireNonNull(getActivity())).get(ProjectListViewModel.class);
         projectViewModel = new ViewModelProvider(requireActivity()).get(ProjectViewModel.class);
@@ -56,12 +69,12 @@ public class ProjectListFragment extends Fragment {
             parent = getArguments() == null ? null : ProjectListFragmentArgs.fromBundle(getArguments()).getParent();
             type = parent == null ? TaskOrParentType.PROJECT :
                     parent instanceof Project ? TaskOrParentType.TASK_GROUP : TaskOrParentType.TASK;
-            createProjectList();
+            createItemList();
         } else {
             createEventList();
         }
 
-
+        setHasOptionsMenu(!isEventList);
         return view;
     }
 
@@ -70,11 +83,18 @@ public class ProjectListFragment extends Fragment {
         navController = Navigation.findNavController(view);
         helper = new FragmentResultHelper(navController);
         AtomicBoolean notPopped = new AtomicBoolean(true);
-        helper.getNavigationResultLiveData(resultReference).observe(requireActivity(), result -> {
-            helper.setNavigationResult(resultReference, result);
-            if (result != null && requestedType != null && notPopped.get()) {
-                navController.popBackStack();
-                notPopped.set(false);
+        helper.getNavigationResultLiveData(resultReference).observe(getViewLifecycleOwner(), result -> {
+            if (onResult == null) {
+                if (result != null && requestedType != null) {
+                    helper.setNavigationResult(resultReference, result);
+                    if (notPopped.get()) {
+                        navController.popBackStack();
+                        notPopped.set(false);
+                    }
+                }
+            } else {
+                onResult.accept((TaskOrParent) result);
+                onResult = null;
             }
         });
         TabLayout tab = view.findViewById(R.id.tab_list_type);
@@ -102,19 +122,92 @@ public class ProjectListFragment extends Fragment {
         });
     }
 
-    private void createProjectList() {
-        LiveData<? extends List<? extends TaskOrParent>> taskOrParentList =
-                parent == null ? projectViewModel.getProjects() : parent.getChildren(projectViewModel.getProjectDao());
-        ProjectRecyclerViewAdapter adapter =
-                new ProjectRecyclerViewAdapter(new ProjectRecyclerViewAdapter.ProjectDiff(), this::onItemClick,
-                        this::onItemLongClick, getViewLifecycleOwner(), projectViewModel);
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.task_list_options, menu);
+        sharedPref = requireActivity().getPreferences(Context.MODE_PRIVATE);
+//        for (int i = 0 )
+        for (int i = 0; i < statusSharedPrefRef.length; i++) {
+            showWithCompletionStatus[i] = sharedPref.getBoolean(statusSharedPrefRef[i], true);
+            menu.findItem(completionStatusIds[i]).setChecked(showWithCompletionStatus[i]);
+        }
+        updateItemList();
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        item.setChecked(!item.isChecked());
+        if (item.getItemId() == R.id.collapse) {
+            collapsed = !collapsed;
+            createTaskOrParentList();
+        } else {
+            SharedPreferences.Editor editor = sharedPref.edit();
+            for (int i = 0; i < completionStatusIds.length; i++) {
+                if (item.getItemId() == completionStatusIds[i]) {
+                    showWithCompletionStatus[i] = !showWithCompletionStatus[i];
+                    editor.putBoolean(statusSharedPrefRef[i], showWithCompletionStatus[i]);
+                    break;
+                }
+            }
+            editor.apply();
+            updateItemList();
+        }
+        //setMenuVisibility(true);
+        return true;
+    }
+
+    private void createTaskOrParentList() {
+        if (taskOrParentList != null) taskOrParentList.removeObservers(getViewLifecycleOwner());
+        taskOrParentList = collapsed
+            ? projectViewModel.getProjectDao().getTaskViews(WorkTimerFragment.findDaysSinceEpoch())//.getTasksByAdjustedPriority(WorkTimerFragment.findDaysSinceEpoch())
+            : parent == null
+            ? projectViewModel.getProjects()
+            : parent.getChildren(projectViewModel.getProjectDao());
+        taskOrParentList.observe(getViewLifecycleOwner(), items -> {
+            if (collapsed) {
+                List<TaskView> converted = items.stream().map(item -> (TaskView) item)
+                        .sorted(Comparator.comparingInt(view -> ((TaskView) view).getTask().getPriority().getNumber())
+                                .thenComparingDouble(view -> ((TaskView) view).findAdjustedPriority()).reversed()).collect(Collectors.toList());
+                itemsToShow.clear();
+                itemsToShow.addAll(converted);
+                for (TaskOrParent item : items) {
+                    if (item instanceof TaskView) Log.d("project", item.toString());
+                }
+            } else {
+                itemsToShow.clear();
+                itemsToShow.addAll(items);
+            }
+            updateItemList();
+        });
+    }
+
+    private void createItemList() {
+        adapter = new ProjectRecyclerViewAdapter(new ProjectRecyclerViewAdapter.ProjectDiff(), this::onItemClick,
+                        this::onItemLongClick, requireActivity(), projectViewModel);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        taskOrParentList.observe(requireActivity(), adapter::convertAndSubmitList);
+        createTaskOrParentList();
         fab.setOnClickListener(this::createItem);
     }
 
+    private void updateItemList() {
+        List<TaskOrParent> filteredItems = new ArrayList<>();
+        for (TaskOrParent item : itemsToShow) {
+            for (int i = 0; i < completionStatuses.length; i++) {
+                if (showWithCompletionStatus[i] && completionStatuses[i] == item.getCompletionStatus()) {
+                    filteredItems.add(item);
+                }
+            }
+        }
+        adapter.convertAndSubmitList(filteredItems);
+    }
+
     public void createItem(View v) {
+        if (type == TaskOrParentType.TASK && parent != null) {
+            navController.navigate(ProjectListFragmentDirections.actionCreateTask(parent.getId()));
+            return;
+        }
         AbstractMap.SimpleEntry<EditText, AlertDialog.Builder> values = createDialogBuilder();
         AlertDialog.Builder builder = values.getValue();
         builder.setTitle("New " + type);
@@ -130,14 +223,8 @@ public class ProjectListFragment extends Fragment {
                 case TASK_GROUP:
                     TaskGroup newTaskGroup = new TaskGroup();
                     newTaskGroup.setName(input.getText().toString());
-                    if (parent instanceof Project) newTaskGroup.parentProjectName = parent.getName();
+                    if (parent instanceof Project) newTaskGroup.parentProjectId = ((Project) parent).id;
                     projectViewModel.doAction(dao -> dao.insertTaskGroup(newTaskGroup));
-                    break;
-                case TASK:
-                    Task newTask = new Task();
-                    newTask.setName(input.getText().toString());
-                    if (parent instanceof TaskGroup) newTask.parentTaskGroupId = ((TaskGroup) parent).id;
-                    projectViewModel.doAction(dao -> dao.insertTask(newTask));
                     break;
             }
         });
@@ -146,6 +233,31 @@ public class ProjectListFragment extends Fragment {
     }
 
     private void onItemLongClick(TaskOrParent item) {
+        if (collapsed) {
+            renameItem(item);
+            return;
+        }
+        AlertDialog.Builder b = new AlertDialog.Builder(requireActivity());
+        b.setTitle("Edit " + type);
+        String[] editingOptions = type == TaskOrParentType.PROJECT
+                ? new String[]{"Rename", "Merge Into"} : new String[]{"Rename", "Merge Into", "Move"};
+        b.setItems(editingOptions, (dialog, which) -> {
+            dialog.dismiss();
+            switch(which) {
+                case 0: renameItem(item); break;
+                case 1: mergeItem(item); break;
+                case 2: moveItem(item); break;
+            }
+        });
+        b.show();
+    }
+
+    private void renameItem(TaskOrParent item) {
+        if (type == TaskOrParentType.TASK || collapsed) {
+            Task item2 = ((TaskView) item).getTask();
+            navController.navigate(ProjectListFragmentDirections.actionCreateTask(item2.parentTaskGroupId).setStartingTask(item2));
+            return;
+        }
         AbstractMap.SimpleEntry<EditText, AlertDialog.Builder> values = createDialogBuilder();
         AlertDialog.Builder builder = values.getValue();
         builder.setTitle("Edit " + type);
@@ -154,14 +266,45 @@ public class ProjectListFragment extends Fragment {
 
         builder.setPositiveButton("Submit", (dialog, which) -> {
             item.setName(input.getText().toString());
-            switch (type) {
-                case PROJECT: projectViewModel.doAction(dao -> dao.updateProject((Project) item)); break;
-                case TASK_GROUP: projectViewModel.doAction(dao -> dao.updateTaskGroup((TaskGroup) item)); break;
-                case TASK: projectViewModel.doAction(dao -> dao.updateTask((Task) item)); break;
-            }
+            item.updateInDb(projectViewModel);
         });
-
         builder.show();
+    }
+
+    private void mergeItem(TaskOrParent absorbedItem) {
+        navController.navigate(ProjectListFragmentDirections.requestTaskOrParent().setIsRequest(true).setRequestedType(type));
+        onResult = keptItem -> {
+            if (absorbedItem instanceof Task) {
+                projectViewModel.getProjectDao().getTaskRecordsByTaskId(absorbedItem.getId()).observe(getViewLifecycleOwner(), records -> {
+                    for (TaskTimeRecord record : records) {
+                        record.setTaskId(keptItem.getId());
+                        projectViewModel.doAction(dao -> dao.updateTaskRecord(record));
+                    }
+                    keptItem.updateInDb(projectViewModel);
+                    absorbedItem.deleteInDb(projectViewModel);
+                });
+            } else {
+                absorbedItem.getChildren(projectViewModel.getProjectDao()).observe(getViewLifecycleOwner(), children -> {
+                    for (TaskOrParent child : children) {
+                        child.setParentId(keptItem.getId());
+                        child.updateInDb(projectViewModel);
+                    }
+                    absorbedItem.deleteInDb(projectViewModel);
+                });
+            }
+        };
+    }
+
+    private void moveItem(TaskOrParent item) {
+        if (type == TaskOrParentType.PROJECT) return;
+        onResult = newParent -> {
+            Log.d("project", "Observing: " + newParent);
+            item.setParentId(newParent.getId());
+            item.updateInDb(projectViewModel);
+        };
+        assert type.findParentType() != null;
+        navController.navigate(ProjectListFragmentDirections.requestTaskOrParent()
+                .setIsRequest(true).setRequestedType(type.findParentType()));
     }
 
     private AbstractMap.SimpleEntry<EditText, AlertDialog.Builder> createDialogBuilder() {
@@ -180,9 +323,10 @@ public class ProjectListFragment extends Fragment {
     private void onItemClick(TaskOrParent newParent) {
         if (type == requestedType) {
             helper.setNavigationResult(resultReference, newParent);
+            navController.popBackStack();
             return;
         }
-        if (newParent instanceof Task) return;
+        if (newParent instanceof Task || newParent instanceof TaskView) return;
         navController.navigate(ProjectListFragmentDirections.changeListType()
                 .setParent(newParent).setIsRequest(requestedType != null)
                 .setRequestedType(requestedType == null ? TaskOrParentType.TASK : requestedType).setIsEventList(false));
@@ -191,12 +335,12 @@ public class ProjectListFragment extends Fragment {
 
 
     private void createEventList() {
-        TimeRangeItemAdapter adapter = new TimeRangeItemAdapter((view, item) -> view.setText(((Event) item).getName()), item ->
+        TimeRangeItemAdapter eventAdapter = new TimeRangeItemAdapter((view, item) -> view.setText(((Event) item).getName()), item ->
             navController.navigate(ProjectListFragmentDirections.actionCreateEvent().setStartingEvent((Event) item)));
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(eventAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        projectViewModel.getProjectDao().getEventsByDay(WorkTimerFragment.findDaysSinceEpoch()).observe(requireActivity(),
-                adapter::convertAndSubmitList);
+        projectViewModel.getProjectDao().getEventsByDay(WorkTimerFragment.findDaysSinceEpoch()).observe(getViewLifecycleOwner(),
+                eventAdapter::convertAndSubmitList);
         fab.setOnClickListener(view -> navController.navigate(ProjectListFragmentDirections.actionCreateEvent()));
     }
 }

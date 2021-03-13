@@ -15,6 +15,7 @@
             tools:layout="@layout/fragment_project_list">
         <action android:id="@+id/change_list_type" app:destination="@+id/project_list_fragment" />
         <action android:id="@+id/action_create_event" app:destination="@id/event_creator_fragment" />
+        <action android:id="@+id/action_create_task" app:destination="@id/task_creator_fragment" />
         <argument android:name="isEventList" app:argType="boolean" android:defaultValue="false" />
         <argument android:name="parent" app:argType="com.example.personalproductivity.TaskOrParent" android:defaultValue="@null"
                   app:nullable="true"/>
@@ -31,6 +32,15 @@
                   app:nullable="true" />
     </fragment>
     <fragment
+            android:id="@+id/task_creator_fragment"
+            android:name="com.example.personalproductivity.TaskCreatorFragment"
+            android:label="Create task"
+            tools:layout="@layout/fragment_task_creator">
+        <argument android:name="parentId" app:argType="integer" />
+        <argument android:name="startingTask" app:argType="com.example.personalproductivity.Task" android:defaultValue="@null"
+                  app:nullable="true" />
+    </fragment>
+    <fragment
             android:id="@+id/task_statistics_fragment"
             android:name="com.example.personalproductivity.TaskStatisticsFragment"
             android:label="Task Statistics"
@@ -38,4 +48,8 @@
         <argument android:name="tab" app:argType="integer" android:defaultValue="0" />
     </fragment>
     <action android:id="@+id/open_tab" app:destination="@id/task_statistics_fragment" />
+    <fragment
+            android:id="@+id/settings_fragment"
+            android:name="com.example.personalproductivity.SettingsFragment"
+            android:label="Settings" />
 </navigation>

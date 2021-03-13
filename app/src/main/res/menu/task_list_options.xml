@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:id="@+id/shown_completion_status" android:checkableBehavior="all">
+        <item android:checked="true" android:title="To Do" android:icon="@drawable/todo_colored" android:id="@+id/todo_later" />
+        <item android:checked="true" android:title="In Progress" android:icon="@drawable/clock_colored" android:id="@+id/in_progress" />
+        <item android:checked="true" android:title="Complete" android:icon="@drawable/tick_colored" android:id="@+id/complete" />
+        <item android:checked="true" android:title="Failed" android:icon="@drawable/cross_colored" android:id="@+id/failed" />
+        <item android:checked="false" android:title="Collapse" android:icon="@drawable/cross_colored" android:id="@+id/collapse" />
+    </group>
+</menu>

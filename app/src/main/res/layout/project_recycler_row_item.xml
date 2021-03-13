@@ -43,5 +43,18 @@
                          android:layout_height="wrap_content"
                          android:button="@drawable/cross_selector"/>
         </RadioGroup>
+        <TextView
+                android:layout_width="wrap_content" tools:text="Expected"
+                android:layout_height="wrap_content" android:id="@+id/text_priority"
+                card_view:layout_constraintBottom_toBottomOf="parent"
+                card_view:layout_constraintStart_toEndOf="@+id/text_time_spent"
+                card_view:layout_constraintEnd_toStartOf="@+id/radio_group_completion_status"
+                android:layout_marginBottom="4dp"/>
+        <TextView
+                android:layout_width="wrap_content" tools:text="0:23"
+                android:layout_height="wrap_content" android:id="@+id/text_time_today"
+                card_view:layout_constraintEnd_toEndOf="parent"
+                card_view:layout_constraintTop_toTopOf="@+id/text_name" android:layout_marginEnd="4dp"
+                card_view:layout_constraintBottom_toTopOf="@+id/radio_group_completion_status"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

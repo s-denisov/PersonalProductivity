@@ -31,4 +31,7 @@
     <string name="event_time_start">Event start</string>
     <string name="event_time_end">Event end</string>
     <string name="show_schedule">Schedule</string>
+    <string name="task_name">Task name</string>
+    <string name="expected_time">Expected time</string>
+    <string name="deadline">Days until deadline</string>
 </resources>

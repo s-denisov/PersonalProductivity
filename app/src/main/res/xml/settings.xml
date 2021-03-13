@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:app="http://schemas.android.com/apk/res-auto">
+    <EditTextPreference app:useSimpleSummaryProvider="true" app:key="PersonalProductivity pref_target_work"
+                        android:title="Target work percentage" android:defaultValue="65" />
+    <EditTextPreference app:useSimpleSummaryProvider="true" app:key="PersonalProductivity pref_session_length"
+                        android:title="Work session length" android:defaultValue="30" />
+    <EditTextPreference app:useSimpleSummaryProvider="true" app:key="PersonalProductivity pref_short_break_length"
+                        android:title="Short break length" android:defaultValue="5" />
+    <EditTextPreference app:useSimpleSummaryProvider="true" app:key="PersonalProductivity pref_long_break_length"
+                        android:title="Long break length" android:defaultValue="30" />
+    <EditTextPreference app:useSimpleSummaryProvider="true" app:key="PersonalProductivity pref_max_session_length"
+                        android:title="Max session length" android:defaultValue="45" />
+    <EditTextPreference app:useSimpleSummaryProvider="true" app:key="PersonalProductivity pref_max_block_length"
+                        android:title="Max block length" android:defaultValue="150" />
+</PreferenceScreen>

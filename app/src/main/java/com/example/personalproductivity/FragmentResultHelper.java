@@ -1,5 +1,6 @@
 package com.example.personalproductivity;
 
+import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.navigation.NavBackStackEntry;
@@ -24,6 +25,7 @@ public class FragmentResultHelper {
         NavBackStackEntry back = navController.getPreviousBackStackEntry();
         if (back != null) {
             back.getSavedStateHandle().set(key, result);
+            Log.d("project", "Setting result: " + result);
         }
     }
 }

@@ -1,6 +1,5 @@
 package com.example.personalproductivity;
 
-import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.room.Entity;
 import androidx.room.Ignore;
@@ -16,7 +15,9 @@ import java.util.Objects;
 @TypeConverters({CompletionStatus.class})
 public class Project implements TaskOrParent {
 
-    @PrimaryKey @NonNull @Getter @Setter
+    @PrimaryKey(autoGenerate = true) @Getter
+    public int id;
+    @Getter @Setter
     public String name;
     @Getter @Setter
     public CompletionStatus completionStatus = CompletionStatus.IN_PROGRESS;
@@ -35,7 +36,20 @@ public class Project implements TaskOrParent {
 
     @Override
     public LiveData<List<TaskGroup>> getChildren(ProjectDao source) {
-        return source.getTaskGroups(name);
+        return source.getTaskGroups(id);
+    }
+
+    @Override
+    public void setParentId(int parentId) {}
+
+    @Override
+    public void updateInDb(ProjectViewModel viewModel) {
+        viewModel.doAction(dao -> dao.updateProject(this));
+    }
+
+    @Override
+    public void deleteInDb(ProjectViewModel viewModel) {
+        viewModel.doAction(dao -> dao.deleteProject(this));
     }
 
     @Override

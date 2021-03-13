@@ -11,6 +11,14 @@ public enum TaskOrParentType {
         this.stringValue = stringValue;
     }
 
+    public TaskOrParentType findParentType() {
+        switch (this) {
+            case TASK_GROUP: return PROJECT;
+            case TASK: return TASK_GROUP;
+        }
+        return null;
+    }
+
     @NonNull
     @Override
     public String toString() {

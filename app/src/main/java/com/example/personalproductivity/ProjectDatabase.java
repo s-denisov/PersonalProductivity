@@ -6,7 +6,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
 @Database(entities = {Project.class, TaskGroup.class, Task.class, TaskTimeRecord.class,
-    Day.class, Event.class}, version = 8)
+    Day.class, Event.class}, version = 15)
 public abstract class ProjectDatabase extends RoomDatabase {
 
     public abstract ProjectDao projectDao();

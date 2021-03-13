@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class TaskStatisticsFragment extends Fragment {
@@ -54,6 +55,7 @@ public class TaskStatisticsFragment extends Fragment {
     private TextView dateText;
     private NavController navController;
     private long daysBeforeCurrent = 0;
+    private Consumer<Task> onResult;
 
     @Nullable
     @Override
@@ -63,14 +65,20 @@ public class TaskStatisticsFragment extends Fragment {
         dao = viewModel.getProjectDao();
         weekTotalText = view.findViewById(R.id.text_week_total);
         dateText = view.findViewById(R.id.text_date);
-
-
         return view;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         navController = Navigation.findNavController(view);
+
+        if (onResult != null) {
+            FragmentResultHelper helper = new FragmentResultHelper(navController);
+            helper.getNavigationResultLiveData(ProjectListFragment.resultReference).observe(getViewLifecycleOwner(), task -> {
+                onResult.accept((Task) task);
+                onResult = null;
+            });
+        }
 
         TabLayout chartType = view.findViewById(R.id.tab_chart_type);
         AtomicBoolean selectedByUser = new AtomicBoolean(true);
@@ -230,10 +238,10 @@ public class TaskStatisticsFragment extends Fragment {
                 long millisWorked = 0;
                 for (TaskTimeRecord record : records) millisWorked += record.getLength();
                 float adjustedMillisWorked = 7.0f / 6 * dayData.subtractPrivateStudy(millisWorked);
-                float percentageWorked = Math.max(0, 100 * adjustedMillisWorked / dayData.getTargetWorkTime());
-                if (daysSinceStart == 5) Log.d("project", String.valueOf(adjustedMillisWorked / dayData.getTargetWorkTime()));
+                float percentageWorked = Math.max(0, 100 * adjustedMillisWorked / dayData.findTargetWorkTime());
+                if (daysSinceStart == 5) Log.d("project", String.valueOf(adjustedMillisWorked / dayData.findTargetWorkTime()));
                 List<Entry> barPoints = new ArrayList<>();
-                float halfBarWidth = (float) dayData.getTargetWorkTime() / 100_000_000; // 13.89 hours fills entire width
+                float halfBarWidth = (float) dayData.findTargetWorkTime() / 100_000_000; // 13.89 hours fills entire width
                 barPoints.add(new Entry(daysSinceStart - halfBarWidth, percentageWorked));
                 barPoints.add(new Entry(daysSinceStart + halfBarWidth, percentageWorked));
                 LineDataSet dataSet = new LineDataSet(barPoints, "");
@@ -247,7 +255,7 @@ public class TaskStatisticsFragment extends Fragment {
                 timeChart.invalidate();
 
                 totalMillisWorked.set(totalMillisWorked.get() + adjustedMillisWorked);
-                totalMillisAvailable.addAndGet(dayData.getTargetWorkTime());
+                totalMillisAvailable.addAndGet(dayData.findTargetWorkTime());
                 weekTotalText.setText(String.format("%.1f", 100 * totalMillisWorked.get() / totalMillisAvailable.get()) + "%");
             }));
         }
@@ -262,13 +270,12 @@ public class TaskStatisticsFragment extends Fragment {
         TimeRangeItemAdapter adapter = new TimeRangeItemAdapter((recordTask, record) ->
                 dao.getTask(((TaskTimeRecord) record).getTaskId()).observe(getViewLifecycleOwner(), task -> recordTask.setText(task.getName())),
                 (record) -> {
-                    navController.navigate(ProjectListFragmentDirections.requestTaskOrParent().setIsRequest(true));
-                    FragmentResultHelper helper = new FragmentResultHelper(navController);
-                    helper.getNavigationResultLiveData(ProjectListFragment.resultReference).observe(requireActivity(), task -> {
+                    onResult = task -> {
                         TaskTimeRecord taskRecord = (TaskTimeRecord) record;
-                        taskRecord.setTaskId(((Task) task).id);
+                        taskRecord.setTaskId(task.id);
                         viewModel.doAction(dao -> dao.updateTaskRecord(taskRecord));
-                    });
+                    };
+                    navController.navigate(ProjectListFragmentDirections.requestTaskOrParent().setIsRequest(true));
                 });
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -277,7 +284,7 @@ public class TaskStatisticsFragment extends Fragment {
 
     private void updateWorkList(TimeRangeItemAdapter adapter) {
         dao.getTaskRecordsByDay(WorkTimerFragment.findDaysSinceEpoch() - daysBeforeCurrent)
-                .observe(requireActivity(), adapter::convertAndSubmitList);
+                .observe(getViewLifecycleOwner(), adapter::convertAndSubmitList);
     }
 
     private String formatDate(long daysSinceEpoch) {
