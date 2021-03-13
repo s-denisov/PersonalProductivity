@@ -13,8 +13,6 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import com.example.personalproductivity.databinding.FragmentTaskCreatorBinding;
 
-import java.time.LocalDateTime;
-
 public class TaskCreatorFragment extends Fragment {
 
     private FragmentTaskCreatorBinding binding;
@@ -59,14 +57,18 @@ public class TaskCreatorFragment extends Fragment {
         task.setName(binding.editTaskName.getText().toString());
         task.setParentId(parentId);
         task.setPriority((Priority) binding.spinnerTaskPriority.getSelectedItem());
-        String[] expectedTimes = binding.editExpectedTime.getText().toString().split(":");
-        task.setExpectedTime(60_000 * (Long.parseLong(expectedTimes[0]) * 60 + Long.parseLong(expectedTimes[1])));
-        LocalDateTime deadline = LocalDateTime.now().withHour(22).withMinute(0).withSecond(0).withNano(0)
-                .plusDays(Integer.parseInt(binding.editDeadline.getText().toString()) - 1);
+        task.setExpectedTime(hourMinToMillis(binding.editExpectedTime.getText().toString()));
+//        LocalDateTime deadline = LocalDateTime.now().withHour(22).withMinute(0).withSecond(0).withNano(0)
+//                .plusDays(Integer.parseInt(binding.editDeadline.getText().toString()) - 1);
         task.setDeadlineDate(WorkTimerFragment.findDaysSinceEpoch() + Integer.parseInt(binding.editDeadline.getText().toString()));
         projectViewModel.doAction(dao -> {
             if (startingTask == null) dao.insertTask(task); else dao.updateTask(task);
         });
         navController.popBackStack();
+    }
+
+    public static long hourMinToMillis(String hourMin) {
+        String[] expectedTimes = hourMin.split(":");
+        return 60_000 * (Long.parseLong(expectedTimes[0]) * 60 + Long.parseLong(expectedTimes[1]));
     }
 }

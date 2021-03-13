@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,7 +39,7 @@ public class WorkTimerFragment extends Fragment {
     private Spinner taskChoice;
     private CheckBox privateStudyBox;
 
-    private Day day;
+    private DayView dayView;
     private List<Schedule.ScheduledItem> schedule;
     private long sessionLength;
     private SharedPreferences sharedPref;
@@ -88,8 +87,8 @@ public class WorkTimerFragment extends Fragment {
 
         manageTaskChoice(view);
 
-        projectViewModel.getProjectDao().getDay(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), dayData -> {
-            day = dayData;
+        projectViewModel.getProjectDao().getDayView(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), dayData -> {
+            dayView = dayData;
             manageDay(view);
         });
 
@@ -121,8 +120,8 @@ public class WorkTimerFragment extends Fragment {
             adapterTaskViews.clear();
             int highestPriority = -1;
             for (TaskView taskView : taskViews) {
-                if (taskView.getTask().getPriority().getNumber() >= highestPriority && taskView.findTimeToDoToday() > 0 &&
-                        (taskView.findTargetToday() >= 900_000 || taskView.findDaysUntilDeadline() <= 1)
+                if (taskView.getTask().getPriority().getNumber() >= highestPriority && taskView.findTimeToDoToday() > 0 //&&
+                        //(taskView.findTargetToday() >= 900_000 || taskView.findDaysUntilDeadline() <= 1)
                         // A task must either last at least 15 minutes or be close to deadline (without the second case, short tasks would never be done).
                         && taskView.getCompletionStatus() == CompletionStatus.IN_PROGRESS) {
                     if (highestPriority == -1) highestPriority = taskView.getTask().getPriority().getNumber();
@@ -194,8 +193,8 @@ public class WorkTimerFragment extends Fragment {
     }
 
     private void manageDay(View view) {
-        if (day == null) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getActivity()));
+        if (dayView == null) {
+            /*AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getActivity()));
             builder.setTitle("Hours in school today");
 
             FrameLayout dialogContainer = new FrameLayout(getActivity());
@@ -204,18 +203,26 @@ public class WorkTimerFragment extends Fragment {
             input.setInputType(InputType.TYPE_CLASS_NUMBER);
             dialogContainer.addView(input);
             builder.setView(dialogContainer);
-            builder.setPositiveButton("Submit", (dialog, which) -> {
-                long schoolMillis = (long) (Double.parseDouble(input.getText().toString()) * 3600_000);
-                long targetMillis = schoolMillis == 0 ? 25 * 1800_000 : 13 * 1800_000; // "else" clause is 8.5 hours so 3.5 hours target normally
-                Day newDay = new Day(findDaysSinceEpoch(), targetMillis, schoolMillis, 0);
+            builder.setPositiveButton("Submit", (dialog, which) -> {*/
+//                long schoolMillis = (long) (Double.parseDouble(input.getText().toString()) * 3600_000);
+//                long targetMillis = schoolMillis == 0 ? 25 * 1800_000 : 13 * 1800_000; // "else" clause is 8.5 hours so 3.5 hours target normally
+                AlertDialog dialog = new AlertDialog.Builder(requireActivity()).create();
+                dialog.setTitle("Welcome back!");
+                dialog.setMessage("A new day has started.");
+                dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "OK", (dialog2, which) -> {
+                    dialog2.dismiss();
+                });
+                dialog.show();
+
+                Day newDay = new Day(findDaysSinceEpoch(), 25 * 1800_000, 0, 0);
                 projectViewModel.doAction(dao -> dao.insertDay(newDay));
-            });
-            builder.show();
+//            });
+//            builder.show();
 
         } else {
-            updateDayWorkTime(day, false);
+            updateDayWorkTime(dayView);
             projectViewModel.getProjectDao().getTaskRecordsByDay(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), records -> {
-                long starting = day.subtractPrivateStudy(0);
+                long starting = dayView.subtractPrivateStudy(0);
                 viewModel.setTimeSpentTodayValue(starting);
 
                 projectViewModel.getProjectDao().getEventsByDay(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), events -> {
@@ -241,14 +248,14 @@ public class WorkTimerFragment extends Fragment {
                 
             });
             final long targetChange = 1800_000;
-            view.findViewById(R.id.button_decrease_target).setOnClickListener(v -> {
+            /*view.findViewById(R.id.button_decrease_target).setOnClickListener(v -> {
                 day.setTargetWorkTime(day.findTargetWorkTime() - targetChange);
                 updateDayWorkTime(day, true);
             });
             view.findViewById(R.id.button_increase_target).setOnClickListener(v -> {
                 day.setTargetWorkTime(day.findTargetWorkTime() + targetChange);
                 updateDayWorkTime(day, true);
-            });
+            });*/
         }
     }
 
@@ -292,11 +299,10 @@ public class WorkTimerFragment extends Fragment {
 
 
 
-    private void updateDayWorkTime(Day day, boolean updateDay) {
-        adjustedTargetWorkTime = (long) (day.findTargetWorkTime() * targetWorkProportion * 6 / 7);
+    private void updateDayWorkTime(DayView dayView) {
+        adjustedTargetWorkTime = (long) (dayView.findTargetWorkTime() * targetWorkProportion * 6 / 7);
         timeTargetText.setText(WorkOrBreakTimer.toHoursMinutes(adjustedTargetWorkTime));
-        totalTimeText.setText(WorkOrBreakTimer.toHoursMinutes(day.findTargetWorkTime()));
-        if (updateDay) projectViewModel.doAction(dao -> dao.updateDay(day));
+        totalTimeText.setText(WorkOrBreakTimer.toHoursMinutes(dayView.findTargetWorkTime()));
     }
 
     public static long findDaysSinceEpoch() {
@@ -424,8 +430,8 @@ public class WorkTimerFragment extends Fragment {
                             startStopButton.setText("Sleep");
                             startStopButton.setEnabled(!sharedPref.getBoolean(sleepReference, false));
                             startStopButton.setOnClickListener(view -> {
-                                day.setMissedSleep(-untilEnd);
-                                projectViewModel.doAction(dao -> dao.updateDay(day));
+                                dayView.getDay().setMissedSleep(-untilEnd);
+                                projectViewModel.doAction(dao -> dao.updateDay(dayView.getDay()));
                                 editor.putBoolean(sleepReference, true);
                                 editor.apply();
                                 startStopButton.setEnabled(false);

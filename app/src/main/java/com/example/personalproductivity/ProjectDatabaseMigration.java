@@ -104,6 +104,18 @@ public class ProjectDatabaseMigration {
                 @Override
                 public void migrate(@NonNull SupportSQLiteDatabase database) {
                 }
+            },  new Migration(15, 16) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("ALTER TABLE Day ADD COLUMN missedSleep INTEGER NOT NULL DEFAULT 0");
+                }
+            },  new Migration(16, 17) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("ALTER TABLE Event ADD COLUMN schoolLessons INTEGER NOT NULL DEFAULT 0");
+                    database.execSQL("ALTER TABLE Event ADD COLUMN choreLength INTEGER NOT NULL DEFAULT 0");
+                    database.execSQL("ALTER TABLE Event ADD COLUMN funLength INTEGER NOT NULL DEFAULT 0");
+                }
             }
     };
 }

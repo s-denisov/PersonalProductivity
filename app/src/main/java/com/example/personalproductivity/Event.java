@@ -16,5 +16,8 @@ public class Event implements TimeRangeItem, Serializable {
     @NonNull private long daysSinceEpoch;
     @NonNull private long startTimeStamp;
     @NonNull private long length;
+    @NonNull private int schoolLessons;
+    @NonNull private long choreLength;
+    @NonNull private long funLength;
 }
 

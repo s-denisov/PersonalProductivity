@@ -41,19 +41,6 @@ public interface ProjectDao {
             "OR Task.completionStatus='TODO_LATER' GROUP BY Task.id ORDER BY Task.priority DESC")
     LiveData<List<TaskView>> getTaskViews(long daysSinceEpoch);
 
-    @Query("SELECT * FROM Task WHERE completionStatus='IN_PROGRESS' AND deadlineDate > :currentDate AND " +
-            "(expectedTime > (SELECT SUM(CASE WHEN TaskTimeRecord.daysSinceEpoch=:currentDate THEN " +
-            "TaskTimeRecord.length * (deadlineDate - :currentDate) ELSE TaskTimeRecord.length END)" +
-            " FROM TaskTimeRecord WHERE TaskTimeRecord.taskId=Task.id)) " +
-            "ORDER BY lastUsed DESC")
-    LiveData<List<Task>> getTasksWithHighestPriority(long currentDate);
-
-    @Query("SELECT * FROM Task WHERE (completionStatus='TODO_LATER' OR completionStatus='IN_PROGRESS')" +
-            "ORDER BY priority DESC, (expectedTime - (SELECT SUM(TaskTimeRecord.length) FROM TaskTimeRecord" +
-            " WHERE TaskTimeRecord.taskId=Task.id)) / (deadlineDate - :currentDate) ASC")
-//            "ORDER BY (priority * priority * (expectedTime - (SELECT SUM(length) FROM TaskTimeRecord WHERE taskId=Task.id)) / (1 + deadlineDate - :currentDate)) DESC")
-    LiveData<List<Task>> getTasksByAdjustedPriority(long currentDate);
-
     @Query("SELECT * FROM Project WHERE id=" +
             "(SELECT parentProjectId FROM TaskGroup WHERE id=(SELECT parentTaskGroupId FROM Task WHERE id=:taskId))")
     LiveData<Project> getProjectFromTask(int taskId);
@@ -118,9 +105,14 @@ public interface ProjectDao {
     @Update
     void updateDay(Day day);
 
-    @Query("SELECT * FROM Day where daysSinceEpoch=:daysSinceEpoch")
+    @Query("SELECT * FROM Day WHERE daysSinceEpoch=:daysSinceEpoch")
     LiveData<Day> getDay(long daysSinceEpoch);
 
+    @Query("SELECT Day.*, SUM(Event.schoolLessons) AS totalSchoolLessons, SUM(Event.choreLength) AS totalChoreLength, " +
+            "SUM(Event.funLength) AS totalFunLength " +
+            "FROM Day LEFT JOIN Event ON Day.daysSinceEpoch=Event.daysSinceEpoch " +
+            "WHERE Day.daysSinceEpoch=:daysSinceEpoch GROUP BY Day.daysSinceEpoch")
+    LiveData<DayView> getDayView(long daysSinceEpoch);
 
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

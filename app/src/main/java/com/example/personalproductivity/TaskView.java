@@ -21,7 +21,8 @@ public class TaskView implements TaskOrParent {
 
     public double findTargetToday() {
         if (findDaysUntilDeadline() <= 0 || task.expectedTime <= totalLength) return 0;
-        return  (double) (task.expectedTime - totalLength + lengthToday) / findDaysUntilDeadline();
+        double defaultTime = (double) (task.expectedTime - totalLength + lengthToday) / findDaysUntilDeadline();
+        return Math.max(defaultTime, Math.min(15 * 60_000, task.expectedTime - totalLength));
     }
 
     public long findTimeToDoToday() {

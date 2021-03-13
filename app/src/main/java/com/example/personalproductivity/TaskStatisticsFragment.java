@@ -233,12 +233,14 @@ public class TaskStatisticsFragment extends Fragment {
         AtomicLong totalMillisAvailable = new AtomicLong(0);
         for (int i = 0; i < 7; i++) {
             int daysSinceStart = i;
-            dao.getTaskRecordsByDay(day + i).observe(getViewLifecycleOwner(), records -> dao.getDay(
+            dao.getTaskRecordsByDay(day + i).observe(getViewLifecycleOwner(), records -> dao.getDayView(
                     day + daysSinceStart).observe(getViewLifecycleOwner(), dayData -> { if (dayData == null) return;
+                    Log.d("project", dayData.toString());
                 long millisWorked = 0;
                 for (TaskTimeRecord record : records) millisWorked += record.getLength();
                 float adjustedMillisWorked = 7.0f / 6 * dayData.subtractPrivateStudy(millisWorked);
-                float percentageWorked = Math.max(0, 100 * adjustedMillisWorked / dayData.findTargetWorkTime());
+                float percentageWorked = Math.max(0, (100 * adjustedMillisWorked + 50 * dayData.getTotalFunLength())
+                        / dayData.findTargetWorkTime());
                 if (daysSinceStart == 5) Log.d("project", String.valueOf(adjustedMillisWorked / dayData.findTargetWorkTime()));
                 List<Entry> barPoints = new ArrayList<>();
                 float halfBarWidth = (float) dayData.findTargetWorkTime() / 100_000_000; // 13.89 hours fills entire width
