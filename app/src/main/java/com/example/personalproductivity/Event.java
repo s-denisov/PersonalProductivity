@@ -20,4 +20,3 @@ public class Event implements TimeRangeItem, Serializable {
     @NonNull private long choreLength;
     @NonNull private long funLength;
 }
-

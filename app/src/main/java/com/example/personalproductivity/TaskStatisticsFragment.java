@@ -75,7 +75,7 @@ public class TaskStatisticsFragment extends Fragment {
         if (onResult != null) {
             FragmentResultHelper helper = new FragmentResultHelper(navController);
             helper.getNavigationResultLiveData(ProjectListFragment.resultReference).observe(getViewLifecycleOwner(), task -> {
-                onResult.accept((Task) task);
+                onResult.accept(((TaskView) task).getTask());
                 onResult = null;
             });
         }

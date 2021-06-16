@@ -89,7 +89,7 @@ public class WorkTimerFragment extends Fragment {
 
         projectViewModel.getProjectDao().getDayView(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), dayData -> {
             dayView = dayData;
-            manageDay(view);
+            manageDay();
         });
 
         if (viewModel.getTimer() == null) createTimer();
@@ -192,7 +192,7 @@ public class WorkTimerFragment extends Fragment {
         });
     }
 
-    private void manageDay(View view) {
+    private void manageDay() {
         if (dayView == null) {
             /*AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getActivity()));
             builder.setTitle("Hours in school today");
@@ -209,12 +209,10 @@ public class WorkTimerFragment extends Fragment {
                 AlertDialog dialog = new AlertDialog.Builder(requireActivity()).create();
                 dialog.setTitle("Welcome back!");
                 dialog.setMessage("A new day has started.");
-                dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "OK", (dialog2, which) -> {
-                    dialog2.dismiss();
-                });
+                dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "OK", (dialog2, which) -> dialog2.dismiss());
                 dialog.show();
 
-                Day newDay = new Day(findDaysSinceEpoch(), 25 * 1800_000, 0, 0);
+                Day newDay = new Day(findDaysSinceEpoch(), 30 * 1800_000, 0, 0);
                 projectViewModel.doAction(dao -> dao.insertDay(newDay));
 //            });
 //            builder.show();
