@@ -165,12 +165,12 @@ public class TaskStatisticsFragment extends Fragment {
             long day = findPreviousMonday();
             for (int i = 0; i < 7; i++) {
                 int daysSinceStart = i;
-                dao.getTaskRecordsByDay(day + i).observe(getViewLifecycleOwner(), records -> dao.getDay(
+                dao.getTaskRecordsByDay(day + i).observe(getViewLifecycleOwner(), records -> dao.getDayView(
                         day + daysSinceStart).observe(getViewLifecycleOwner(), dayData -> {
                     float[] projectTimes = new float[projects.size() + 1];
                     Arrays.fill(projectTimes, 0);
                     if (dayData != null) {
-                        projectTimes[0] = SCHOOL_EFFICIENCY_MODIFIER * dayData.getSchoolTime() / 3600_000;
+                        projectTimes[0] = SCHOOL_EFFICIENCY_MODIFIER * dayData.getTotalSchoolLessons();
                         totalHours.setValue(totalHours.getValue() + projectTimes[0]);
                     }
                     if (records.isEmpty()) {

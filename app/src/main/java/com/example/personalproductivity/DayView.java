@@ -19,4 +19,8 @@ public class DayView {
     public long findTargetWorkTime() {
         return day.getTargetWorkTime() + day.getMissedSleep() - totalChoreLength;
     }
+
+    public int getTotalSchoolLessons() {
+        return (int) (totalSchoolLessons + day.getSchoolTime() / 3600_000);
+    }
 }
