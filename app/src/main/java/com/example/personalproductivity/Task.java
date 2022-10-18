@@ -13,7 +13,7 @@ import java.util.Objects;
 
 @Entity
 @TypeConverters({CompletionStatus.class, Priority.class})
-public class Task implements TaskOrParent { // TODO: for some reason, crashes on start if TaskOrParent not implemented. Seems to be due to navigation.
+public class Task implements TaskOrParent {
 
     @PrimaryKey(autoGenerate = true) @Getter
     public int id;
