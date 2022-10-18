@@ -75,6 +75,25 @@ public class WorkTimerFragment extends Fragment {
         projectViewModel = new ViewModelProvider(requireActivity()).get(ProjectViewModel.class);
 
         if (viewModel.getRecord() != null) privateStudyBox.setChecked(viewModel.getRecord().isPrivateStudy());
+        // TODO: Remove
+       /*projectViewModel.getProjectDao().numTasks().observe(getViewLifecycleOwner(), allTasks -> {
+           for (int daysBefore = 1; daysBefore < 100; daysBefore++) {
+               for (int taskNum = 0; taskNum < randint(0, 5); taskNum++) {
+                   TaskTimeRecord record = new TaskTimeRecord(System.currentTimeMillis() - 24L * 3600_000 * daysBefore + taskNum * 7200_000L - 4 * 3600_000L, findDaysSinceEpoch() - daysBefore,
+                           allTasks.get(randint(0, allTasks.size() - 1)).id, false);
+                   record.setLength(randint(1800_000, 7200_000));
+                   projectViewModel.doAction(dao -> dao.insertTaskRecord(record));
+               }
+           }Math.random() > 0.5 ? 5 * 3600_000 : 0
+       });*/
+//        for (int daysBefore = 0; daysBefore < 100; daysBefore++) {
+//            Event chores = new Event("Chores", findDaysSinceEpoch() - daysBefore, System.currentTimeMillis() - 24L * daysBefore * 3600_000, 7200_000, 0, 7200_000, 0);
+//            projectViewModel.doAction(dao -> dao.insertEvent(chores));
+//            if (daysBefore % 7 != 2 && daysBefore % 7 != 3) {
+//                Event school = new Event("School", findDaysSinceEpoch() - daysBefore, System.currentTimeMillis() - 8 * 3600_000 - 24L * daysBefore * 3600_000, 7 * 3600_000, 5, 8 * 3600_000, 0);
+//                projectViewModel.doAction(dao -> dao.insertEvent(school));
+//            }
+//        }
 
         manageTaskChoice(view);
 
