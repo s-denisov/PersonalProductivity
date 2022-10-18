@@ -55,6 +55,10 @@ public class WorkTimerFragment extends Fragment {
     public static double targetWorkProportion = 0.65;
 
 
+    // TODO: Remove
+    private static int randint(int min, int max) {
+        return min + (int)(Math.random() * ((max - min) + 1));
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_work_timer, container, false);
@@ -72,15 +76,14 @@ public class WorkTimerFragment extends Fragment {
 
         if (viewModel.getRecord() != null) privateStudyBox.setChecked(viewModel.getRecord().isPrivateStudy());
 
-        // TEMP
-       /*projectViewModel.getProjectDao().getTaskRecordsByDay(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), records -> {
-           for (TaskTimeRecord record : records) {
-               SimpleDateFormat format = new SimpleDateFormat("HH:mm");
-               format.setTimeZone(TimeZone.getDefault());
-               Log.d("project", "log " + record + " " + format.format(record.getStartTimeStamp()));
-               if (record.getStartTimeStamp() == 1614167654365L) {
-                   record.setLength(23 * 60_000);
-                   projectViewModel.doAction(dao -> dao.updateTaskRecord(record));
+        // TODO: Remove
+       /*projectViewModel.getProjectDao().numTasks().observe(getViewLifecycleOwner(), totalTasks -> {
+           for (int daysBefore = 1; daysBefore < 100; daysBefore++) {
+               for (int taskNum = 0; taskNum < randint(0, 5); taskNum++) {
+                   TaskTimeRecord record = new TaskTimeRecord(System.currentTimeMillis() - 24L * 3600_000 * daysBefore + taskNum * 3600_000L, findDaysSinceEpoch() - daysBefore,
+                           randint(0, totalTasks - 1), false);
+                   record.setLength(randint(0, 3600_000));
+                   projectViewModel.doAction(dao -> dao.insertTaskRecord(record));
                }
            }
        });*/
@@ -194,29 +197,14 @@ public class WorkTimerFragment extends Fragment {
 
     private void manageDay() {
         if (dayView == null) {
-            /*AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getActivity()));
-            builder.setTitle("Hours in school today");
+            AlertDialog dialog = new AlertDialog.Builder(requireActivity()).create();
+            dialog.setTitle("Welcome back!");
+            dialog.setMessage("A new day has started.");
+            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "OK", (dialog2, which) -> dialog2.dismiss());
+            dialog.show();
 
-            FrameLayout dialogContainer = new FrameLayout(getActivity());
-            dialogContainer.setPadding(50, 5, 40, 5);
-            final EditText input = new EditText(getActivity());
-            input.setInputType(InputType.TYPE_CLASS_NUMBER);
-            dialogContainer.addView(input);
-            builder.setView(dialogContainer);
-            builder.setPositiveButton("Submit", (dialog, which) -> {*/
-//                long schoolMillis = (long) (Double.parseDouble(input.getText().toString()) * 3600_000);
-//                long targetMillis = schoolMillis == 0 ? 25 * 1800_000 : 13 * 1800_000; // "else" clause is 8.5 hours so 3.5 hours target normally
-                AlertDialog dialog = new AlertDialog.Builder(requireActivity()).create();
-                dialog.setTitle("Welcome back!");
-                dialog.setMessage("A new day has started.");
-                dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "OK", (dialog2, which) -> dialog2.dismiss());
-                dialog.show();
-
-                Day newDay = new Day(findDaysSinceEpoch(), 30 * 1800_000, 0, 0);
-                projectViewModel.doAction(dao -> dao.insertDay(newDay));
-//            });
-//            builder.show();
-
+            Day newDay = new Day(findDaysSinceEpoch(), 30 * 1800_000, 0, 0);
+            projectViewModel.doAction(dao -> dao.insertDay(newDay));
         } else {
             updateDayWorkTime(dayView);
             projectViewModel.getProjectDao().getTaskRecordsByDay(findDaysSinceEpoch()).observe(getViewLifecycleOwner(), records -> {
@@ -245,15 +233,6 @@ public class WorkTimerFragment extends Fragment {
                 for (TaskTimeRecord record : records) viewModel.increaseTimeSpentTodayValue(record.getLength());
                 
             });
-            final long targetChange = 1800_000;
-            /*view.findViewById(R.id.button_decrease_target).setOnClickListener(v -> {
-                day.setTargetWorkTime(day.findTargetWorkTime() - targetChange);
-                updateDayWorkTime(day, true);
-            });
-            view.findViewById(R.id.button_increase_target).setOnClickListener(v -> {
-                day.setTargetWorkTime(day.findTargetWorkTime() + targetChange);
-                updateDayWorkTime(day, true);
-            });*/
         }
     }
 
@@ -435,22 +414,12 @@ public class WorkTimerFragment extends Fragment {
                                 startStopButton.setEnabled(false);
                             });
                         }
-                       /* assert viewModel.getTimeSpentToday().getValue() != null;
-                        long workLeftToday = adjustedTargetWorkTime - viewModel.getTimeSpentToday().getValue();
-                        long workLeftWithBreaks = workLeftToday + 300_000 *
-                                ((long) Math.ceil((double) workLeftToday / 1800_000) - 1);
-                        long routineMillis = 0;
-                        for (int i = 0; i < routineTasksDone.length; i++) if (!routineTasksDone[i]) routineMillis += routineTimes[i];
-                        timeLeftText.setText(WorkOrBreakTimer.formatMilliseconds(untilEnd - workLeftWithBreaks - routineMillis));*/
-
-
                         handler.postDelayed(this, 1000);
                     }
                 }
             }, 0);
         }
     }
-
 
     private void showSchedule(View view) {
         AlertDialog dialog = new AlertDialog.Builder(requireActivity()).create();
@@ -480,7 +449,7 @@ public class WorkTimerFragment extends Fragment {
     }
 
     private void onTick(long millisUntilFinished) {
-        if (/*viewModel.isWorkTimer() && */viewModel.getTaskSelected() != null) {
+        if (viewModel.getTaskSelected() != null) {
             long change = viewModel.getPreviousTimeRemaining() - millisUntilFinished;
             viewModel.increaseTimeSpentTodayValue(change);
             viewModel.getRecord().setLength(System.currentTimeMillis() - viewModel.getRecord().getStartTimeStamp());
@@ -494,8 +463,6 @@ public class WorkTimerFragment extends Fragment {
         if (getContext() != null) {
             ScheduledNotificationBroadcast.createNotification(requireContext(), viewModel.getTimerType().getValue() + " finished");
         }
-//        createTimer();
-//        viewModel.getTimer().start();
         Log.d("project", "Timer finish");
         viewModel.setTimerOnValue(false);
     }
