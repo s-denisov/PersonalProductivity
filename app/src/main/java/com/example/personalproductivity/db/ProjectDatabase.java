@@ -1,4 +1,4 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.db;
 
 import android.content.Context;
 import androidx.room.Database;

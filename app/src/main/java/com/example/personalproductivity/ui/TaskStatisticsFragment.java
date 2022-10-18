@@ -1,4 +1,4 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.ui;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -18,6 +18,9 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.personalproductivity.*;
+import com.example.personalproductivity.db.*;
+import com.example.personalproductivity.viewmodels.ProjectViewModel;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.*;

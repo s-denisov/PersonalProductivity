@@ -1,4 +1,4 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.db;
 
 import androidx.annotation.NonNull;
 import androidx.room.migration.Migration;

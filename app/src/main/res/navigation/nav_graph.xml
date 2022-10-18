@@ -5,44 +5,44 @@
             app:startDestination="@id/work_timer_fragment">
     <fragment
         android:id="@+id/work_timer_fragment"
-        android:name="com.example.personalproductivity.WorkTimerFragment"
+        android:name="com.example.personalproductivity.ui.WorkTimerFragment"
         android:label="Work Timer"
         tools:layout="@layout/fragment_work_timer" />
     <fragment
             android:id="@+id/project_list_fragment"
-            android:name="com.example.personalproductivity.ProjectListFragment"
+            android:name="com.example.personalproductivity.ui.ProjectListFragment"
             android:label="Project List"
             tools:layout="@layout/fragment_project_list">
         <action android:id="@+id/change_list_type" app:destination="@+id/project_list_fragment" />
         <action android:id="@+id/action_create_event" app:destination="@id/event_creator_fragment" />
         <action android:id="@+id/action_create_task" app:destination="@id/task_creator_fragment" />
         <argument android:name="isEventList" app:argType="boolean" android:defaultValue="false" />
-        <argument android:name="parent" app:argType="com.example.personalproductivity.TaskOrParent" android:defaultValue="@null"
+        <argument android:name="parent" app:argType="com.example.personalproductivity.db.TaskOrParent" android:defaultValue="@null"
                   app:nullable="true"/>
-        <argument android:name="requestedType" app:argType="com.example.personalproductivity.TaskOrParentType" android:defaultValue="TASK"/>
+        <argument android:name="requestedType" app:argType="com.example.personalproductivity.db.types.TaskOrParentType" android:defaultValue="TASK"/>
         <argument android:name="isRequest" app:argType="boolean" android:defaultValue="false"/>
     </fragment>
     <action android:id="@+id/request_task_or_parent" app:destination="@id/project_list_fragment" />
     <fragment
             android:id="@+id/event_creator_fragment"
-            android:name="com.example.personalproductivity.EventCreatorFragment"
+            android:name="com.example.personalproductivity.ui.EventCreatorFragment"
             android:label="Create Event"
             tools:layout="@layout/fragment_event_creator">
-        <argument android:name="startingEvent" app:argType="com.example.personalproductivity.Event" android:defaultValue="@null"
+        <argument android:name="startingEvent" app:argType="com.example.personalproductivity.db.Event" android:defaultValue="@null"
                   app:nullable="true" />
     </fragment>
     <fragment
             android:id="@+id/task_creator_fragment"
-            android:name="com.example.personalproductivity.TaskCreatorFragment"
+            android:name="com.example.personalproductivity.ui.TaskCreatorFragment"
             android:label="Create task"
             tools:layout="@layout/fragment_task_creator">
         <argument android:name="parentId" app:argType="integer" />
-        <argument android:name="startingTask" app:argType="com.example.personalproductivity.Task" android:defaultValue="@null"
+        <argument android:name="startingTask" app:argType="com.example.personalproductivity.db.Task" android:defaultValue="@null"
                   app:nullable="true" />
     </fragment>
     <fragment
             android:id="@+id/task_statistics_fragment"
-            android:name="com.example.personalproductivity.TaskStatisticsFragment"
+            android:name="com.example.personalproductivity.ui.TaskStatisticsFragment"
             android:label="Task Statistics"
             tools:layout="@layout/fragment_task_statistics">
         <argument android:name="tab" app:argType="integer" android:defaultValue="0" />
@@ -50,6 +50,6 @@
     <action android:id="@+id/open_tab" app:destination="@id/task_statistics_fragment" />
     <fragment
             android:id="@+id/settings_fragment"
-            android:name="com.example.personalproductivity.SettingsFragment"
+            android:name="com.example.personalproductivity.ui.SettingsFragment"
             android:label="Settings" />
 </navigation>

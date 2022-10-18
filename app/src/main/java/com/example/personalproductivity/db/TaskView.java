@@ -1,8 +1,11 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.db;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.room.Embedded;
+import com.example.personalproductivity.db.types.CompletionStatus;
+import com.example.personalproductivity.viewmodels.ProjectViewModel;
+import com.example.personalproductivity.WorkOrBreakTimer;
 import lombok.Data;
 
 import java.util.List;

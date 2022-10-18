@@ -1,4 +1,4 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.ui;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -17,6 +17,11 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
+import com.example.personalproductivity.*;
+import com.example.personalproductivity.db.*;
+import com.example.personalproductivity.db.types.CompletionStatus;
+import com.example.personalproductivity.viewmodels.ProjectViewModel;
+import com.example.personalproductivity.viewmodels.WorkTimerViewModel;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

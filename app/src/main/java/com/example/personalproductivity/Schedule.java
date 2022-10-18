@@ -3,6 +3,8 @@ package com.example.personalproductivity;
 import android.content.SharedPreferences;
 import android.util.Log;
 import androidx.annotation.NonNull;
+import com.example.personalproductivity.db.Event;
+import com.example.personalproductivity.ui.SettingsFragment;
 import lombok.Data;
 
 import java.time.LocalDateTime;

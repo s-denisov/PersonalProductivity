@@ -1,6 +1,8 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.viewmodels;
 
 import androidx.lifecycle.ViewModel;
+import com.example.personalproductivity.db.TaskOrParent;
+import com.example.personalproductivity.db.types.TaskOrParentType;
 import lombok.Getter;
 import lombok.Setter;
 

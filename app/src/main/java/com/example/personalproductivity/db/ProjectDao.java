@@ -1,4 +1,4 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.db;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.*;

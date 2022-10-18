@@ -1,4 +1,4 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.ui;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -18,6 +18,11 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.personalproductivity.*;
+import com.example.personalproductivity.db.*;
+import com.example.personalproductivity.db.types.CompletionStatus;
+import com.example.personalproductivity.db.types.TaskOrParentType;
+import com.example.personalproductivity.viewmodels.ProjectViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 
@@ -37,7 +42,7 @@ public class ProjectListFragment extends Fragment {
     private boolean collapsed = false;
     private NavController navController;
     private FragmentResultHelper helper;
-    public static final String resultReference = "com.example.personalproductivity.ProjectListFragment.result";
+    public static final String resultReference = "com.example.personalproductivity.ui.ProjectListFragment.result";
     private Consumer<TaskOrParent> onResult;
     private ProjectRecyclerViewAdapter adapter;
     private List<TaskOrParent> itemsToShow = new ArrayList<>();

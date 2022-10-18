@@ -1,4 +1,4 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.ui;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +12,13 @@ import androidx.lifecycle.LiveData;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.personalproductivity.db.types.CompletionStatus;
+import com.example.personalproductivity.viewmodels.ProjectViewModel;
+import com.example.personalproductivity.R;
+import com.example.personalproductivity.WorkOrBreakTimer;
+import com.example.personalproductivity.db.Task;
+import com.example.personalproductivity.db.TaskOrParent;
+import com.example.personalproductivity.db.TaskView;
 
 import java.util.ArrayList;
 import java.util.List;

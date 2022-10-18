@@ -1,10 +1,13 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.db;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
+import com.example.personalproductivity.db.types.CompletionStatus;
+import com.example.personalproductivity.ui.WorkTimerFragment;
+import com.example.personalproductivity.viewmodels.ProjectViewModel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,7 +16,7 @@ import java.util.Objects;
 
 @Entity
 @TypeConverters({CompletionStatus.class})
-public class TaskGroup implements TaskOrParent{
+public class TaskGroup implements TaskOrParent {
 
     @PrimaryKey(autoGenerate = true) @Getter
     public int id;

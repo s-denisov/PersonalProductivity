@@ -1,6 +1,8 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.db;
 
 import androidx.lifecycle.LiveData;
+import com.example.personalproductivity.db.types.CompletionStatus;
+import com.example.personalproductivity.viewmodels.ProjectViewModel;
 
 import java.io.Serializable;
 import java.util.List;

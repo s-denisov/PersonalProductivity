@@ -1,4 +1,4 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.db.types;
 
 public interface TimeRangeItem {
     long getStartTimeStamp();

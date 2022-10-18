@@ -1,4 +1,4 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.ui;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -12,7 +12,10 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
+import com.example.personalproductivity.viewmodels.ProjectViewModel;
+import com.example.personalproductivity.WorkOrBreakTimer;
 import com.example.personalproductivity.databinding.FragmentEventCreatorBinding;
+import com.example.personalproductivity.db.Event;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

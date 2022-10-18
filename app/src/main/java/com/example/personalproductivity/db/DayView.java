@@ -1,6 +1,7 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.db;
 
 import androidx.room.Embedded;
+import com.example.personalproductivity.db.Day;
 import lombok.Data;
 
 @Data

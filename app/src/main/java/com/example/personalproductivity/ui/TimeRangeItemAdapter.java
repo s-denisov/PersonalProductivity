@@ -1,4 +1,4 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.ui;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +8,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.personalproductivity.R;
+import com.example.personalproductivity.db.types.TimeRangeItem;
+import com.example.personalproductivity.WorkOrBreakTimer;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

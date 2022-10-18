@@ -1,4 +1,4 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.db.types;
 
 import androidx.annotation.NonNull;
 import androidx.room.TypeConverter;

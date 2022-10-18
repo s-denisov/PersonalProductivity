@@ -1,9 +1,12 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.viewmodels;
 
 import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import com.example.personalproductivity.db.Project;
+import com.example.personalproductivity.db.ProjectDao;
+import com.example.personalproductivity.db.ProjectDatabase;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;

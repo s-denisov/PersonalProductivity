@@ -1,7 +1,10 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.viewmodels;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import com.example.personalproductivity.WorkOrBreakTimer;
+import com.example.personalproductivity.db.Task;
+import com.example.personalproductivity.db.TaskTimeRecord;
 import lombok.Getter;
 import lombok.Setter;
 

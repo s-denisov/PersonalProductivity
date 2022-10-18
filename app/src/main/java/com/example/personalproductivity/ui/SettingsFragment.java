@@ -1,10 +1,11 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.ui;
 
 import android.os.Bundle;
 import android.text.InputType;
 import androidx.annotation.Nullable;
 import androidx.preference.EditTextPreference;
 import androidx.preference.PreferenceFragmentCompat;
+import com.example.personalproductivity.R;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 

@@ -1,10 +1,13 @@
-package com.example.personalproductivity;
+package com.example.personalproductivity.db;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
+import com.example.personalproductivity.db.types.CompletionStatus;
+import com.example.personalproductivity.db.types.Priority;
+import com.example.personalproductivity.viewmodels.ProjectViewModel;
 import lombok.Getter;
 import lombok.Setter;
 
