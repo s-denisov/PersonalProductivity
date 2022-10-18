@@ -114,8 +114,6 @@ public interface ProjectDao {
             "WHERE Day.daysSinceEpoch=:daysSinceEpoch GROUP BY Day.daysSinceEpoch")
     LiveData<DayView> getDayView(long daysSinceEpoch);
 
-    @Query("DELETE FROM Event")
-    void removeEvents();
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertEvent(Event event);
