@@ -76,13 +76,14 @@ public class WorkTimerFragment extends Fragment {
 
         if (viewModel.getRecord() != null) privateStudyBox.setChecked(viewModel.getRecord().isPrivateStudy());
 
+//        projectViewModel.doAction(dao -> dao.removeAllRecords());
         // TODO: Remove
-       /*projectViewModel.getProjectDao().numTasks().observe(getViewLifecycleOwner(), totalTasks -> {
+       /*projectViewModel.getProjectDao().numTasks().observe(getViewLifecycleOwner(), allTasks -> {
            for (int daysBefore = 1; daysBefore < 100; daysBefore++) {
                for (int taskNum = 0; taskNum < randint(0, 5); taskNum++) {
-                   TaskTimeRecord record = new TaskTimeRecord(System.currentTimeMillis() - 24L * 3600_000 * daysBefore + taskNum * 3600_000L, findDaysSinceEpoch() - daysBefore,
-                           randint(0, totalTasks - 1), false);
-                   record.setLength(randint(0, 3600_000));
+                   TaskTimeRecord record = new TaskTimeRecord(System.currentTimeMillis() - 24L * 3600_000 * daysBefore + taskNum * 7200_000L - 4 * 3600_000L, findDaysSinceEpoch() - daysBefore,
+                           allTasks.get(randint(0, allTasks.size() - 1)).id, false);
+                   record.setLength(randint(1800_000, 7200_000));
                    projectViewModel.doAction(dao -> dao.insertTaskRecord(record));
                }
            }

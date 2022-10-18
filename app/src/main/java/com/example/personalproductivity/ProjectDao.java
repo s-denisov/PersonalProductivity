@@ -48,8 +48,11 @@ public interface ProjectDao {
     @Query("SELECT * FROM Task WHERE id=:id")
     LiveData<Task> getTask(int id);
 
-    @Query("SELECT COUNT(*) FROM Task")
-    LiveData<Integer> numTasks(); // Todo: Remove
+    @Query("SELECT * FROM Task")
+    LiveData<List<Task>> numTasks(); // todo: Remove
+
+    @Query("DELETE FROM TaskTimeRecord")
+    void removeAllRecords(); // todo: Remove
 
     @Query("SELECT SUM(length) FROM TaskTimeRecord WHERE taskId=:taskId")
     LiveData<Long> findTimeSpent(int taskId);
