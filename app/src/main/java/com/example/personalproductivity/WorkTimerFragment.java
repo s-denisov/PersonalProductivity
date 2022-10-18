@@ -244,19 +244,6 @@ public class WorkTimerFragment extends Fragment {
             editor.putLong(dayReference, findDaysSinceEpoch());
             editor.apply();
         }
-        CheckBox[] routineBoxes =  { view.findViewById(R.id.checkbox_morning_prep),
-                view.findViewById(R.id.checkbox_lunch_and_dinner), view.findViewById(R.id.checkbox_exercise) };
-        for (int i = 0; i < routineBoxes.length; i++) {
-            routineTasksDone[i] = sharedPref.getBoolean(routineTaskReferences[i], false);
-            routineBoxes[i].setChecked(routineTasksDone[i]);
-            int finalI = i;
-            routineBoxes[i].setOnClickListener(v -> {
-                boolean checked = ((CheckBox) v).isChecked();
-                routineTasksDone[finalI] = checked;
-                editor.putBoolean(routineTaskReferences[finalI], checked);
-                editor.apply();
-            });
-        }
 
         settingsPref = PreferenceManager.getDefaultSharedPreferences(requireActivity());
         targetWorkProportion = Double.parseDouble(settingsPref.getString(SettingsFragment.TARGET_WORK_KEY, "")) / 100;

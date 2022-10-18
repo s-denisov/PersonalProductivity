@@ -28,7 +28,6 @@ public class WorkOrBreakTimer {
         long hours = seconds / 3600;
         String hoursString = hours == 0 ? "" : hours + ":";
         return String.format("%s%02d:%02d", hoursString, seconds % 3600 / 60, seconds % 60);
-
     }
 
     private void createCountDownTimer() {
