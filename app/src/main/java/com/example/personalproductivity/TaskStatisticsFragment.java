@@ -174,6 +174,7 @@ public class TaskStatisticsFragment extends Fragment {
                         totalHours.setValue(totalHours.getValue() + projectTimes[0]);
                     }
                     if (records.isEmpty()) {
+                        entries.set(daysSinceStart, new BarEntry(daysSinceStart, projectTimes));
                         chart.notifyDataSetChanged();
                         chart.invalidate();
                     }
