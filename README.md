@@ -22,12 +22,15 @@ In order to make sure the user follows a schedule, they may not start a session 
 To prevent them from simply starting the next session if they miss a session, they may only start
 a session up to 5 minutes before the scheduled start time.
 
-
-<img src="screenshots/start-available.jpg" width=200>
-<img src="screenshots/work-session.jpg" width=200>
+<p float="left">
+    <img src="screenshots/start-available.jpg" width=200>
+    <img src="screenshots/work-session.jpg" width=200>
+</p>
 
 ## Hierarchical task list
 
-<img src="screenshots/projects.jpg" width=200>
-<img src="screenshots/task-groups.jpg" width=200>
-<img src="screenshots/tasks.jpg" width=200>
+<p float="left">
+    <img src="screenshots/projects.jpg" width=200>
+    <img src="screenshots/task-groups.jpg" width=200>
+    <img src="screenshots/tasks.jpg" width=200>
+</p>
