@@ -8,9 +8,26 @@ they should be doing.
 The app works by automatically scheduling when the user should be working.
 
 
-<img src="https://drive.google.com/file/d/1ynM9PLeVwp9twLS0XmePDNW2jXY0A2m3/view?usp=sharing" width=200>
+<img src="screenshots/schedule.jpg" width=200>
 
 
-If the user is not currently working, then the
+If the user is not currently working, then
 this is considered a "Break" and the timer shows the time until the next work session.
 
+
+<img src="screenshots/break-timer.jpg" width=200>
+
+
+In order to make sure the user follows a schedule, they may not start a session after the scheduled time.
+To prevent them from simply starting the next session if they miss a session, they may only start
+a session up to 5 minutes before the scheduled start time.
+
+
+<img src="screenshots/start-available.jpg" width=200>
+<img src="screenshots/work-session.jpg" width=200>
+
+## Hierarchical task list
+
+<img src="screenshots/projects.jpg" width=200>
+<img src="screenshots/task-groups.jpg" width=200>
+<img src="screenshots/tasks.jpg" width=200>
