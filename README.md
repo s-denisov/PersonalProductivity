@@ -66,6 +66,10 @@ The task has a priority (from guaranteed to expected to unlikely, representing t
 done). Expected time and days until a deadline are also entered and are used to calculate how long the task
 should be worked on today.
 
+## Events
+
+Events are things that have specific start and end times (unlike tasks which can be completed at any time during the day).
+
 
 ## Statistics
 
