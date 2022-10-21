@@ -17,12 +17,10 @@ import com.example.personalproductivity.WorkOrBreakTimer;
 import com.example.personalproductivity.databinding.FragmentEventCreatorBinding;
 import com.example.personalproductivity.db.Event;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.TimeZone;
 
 public class EventCreatorFragment extends Fragment {
 
@@ -31,6 +29,9 @@ public class EventCreatorFragment extends Fragment {
     private NavController navController;
     private Event event;
     private boolean editing;
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yy");
+    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
 
     @SuppressLint("SetTextI18n")
     @Nullable
@@ -41,19 +42,26 @@ public class EventCreatorFragment extends Fragment {
         projectViewModel = new ViewModelProvider(requireActivity()).get(ProjectViewModel.class);
         if (getArguments() != null) event = EventCreatorFragmentArgs.fromBundle(getArguments()).getStartingEvent();
         editing = event != null;
-        if (event == null) event = new Event("", 0, 0, 0, 0, 0, 0);
+        if (!editing) {
+            LocalDateTime now = LocalDateTime.now();
+            binding.editDate.setText(dateFormatter.format(now));
+            binding.editTimeStart.setText(timeFormatter.format(now));
+            binding.editTimeEnd.setText(timeFormatter.format(now));
+            event = new Event("", 0, 0, 0, 0, 0, 0);
+        } else {
+            ZonedDateTime eventStart = Instant.ofEpochMilli(event.getStartTimeStamp()).atZone(ZoneId.systemDefault());
+            binding.editDate.setText(dateFormatter.format(eventStart));
+            binding.editTimeStart.setText(timeFormatter.format(eventStart));
+            binding.editTimeEnd.setText(timeFormatter.format(
+                    Instant.ofEpochMilli(event.getStartTimeStamp() + event.getLength()).atZone(ZoneId.systemDefault())));
+        }
+
         binding.editName.setText(event.getName());
         binding.editSchoolLessons.setText(Integer.toString(event.getSchoolLessons()));
         binding.editChoreTime.setText(WorkOrBreakTimer.toHoursMinutes(event.getChoreLength()));
         binding.editFunTime.setText(WorkOrBreakTimer.toHoursMinutes(event.getFunLength()));
 
-        if (event == null) {
-            binding.editSchoolLessons.setText("0");
-            binding.editTimeStart.setText("0");
-        } else {
-            binding.editName.setText(event.getName());
-            binding.editSchoolLessons.setText(Integer.toString(event.getSchoolLessons()));
-        }
+
         return binding.getRoot();
     }
 
@@ -63,9 +71,8 @@ public class EventCreatorFragment extends Fragment {
     }
 
     private void submit(View view) {
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
         try {
-            LocalDate date = LocalDate.parse(binding.editDate.getText().toString(), DateTimeFormatter.ofPattern("dd/MM/yy"));
+            LocalDate date = LocalDate.parse(binding.editDate.getText().toString(), dateFormatter);
             LocalTime start = LocalTime.parse(binding.editTimeStart.getText().toString(), timeFormatter);
             long epochTime = LocalDateTime.of(date, start).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000L;
             LocalTime end = LocalTime.parse(binding.editTimeEnd.getText().toString(), timeFormatter);
