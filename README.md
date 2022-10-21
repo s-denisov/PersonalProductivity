@@ -71,6 +71,40 @@ should be worked on today.
 Events are things that have specific start and end times (unlike tasks which can be completed at any time during the day).
 
 
+Form for adding a new event:
+
+
+<img src="screenshots/event-creator.jpg" width=200>
+
+
+Event list listing all of today's events:
+
+
+<img src="screenshots/events-list.jpg" width=200>
+
+
+Events from this list can be modified by long pressing them - then the form will be opened again with the event's current
+information filled in, so that the user can change what they want and keep everything else the same. The following is the
+result of long pressing "B":
+
+
+<img src="screenshots/event-modification-form.jpg" width=200>
+
+
+Any events modify the automatically generated schedule. Schedule without any events:
+
+
+<img src="screenshots/schedule.jpg" width=200>
+
+
+Schedule after the two events shown above were added:
+
+
+<img src="screenshots/schedule-after-events.jpg" width=200>
+
+
+Notice that there are now gaps at 12:00-13:00 and 14:10-15:00, i.e. the times when the two events are schedule to occur.
+
 ## Statistics
 
 This contains 3 tabs with different statistics. They are displayed using MPAndroidChart
